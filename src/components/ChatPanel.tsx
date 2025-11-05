@@ -88,7 +88,6 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate }: ChatPanel
         },
         undefined, // No cancel action needed
         handleLogin, // Login button
-        undefined, // No signup button
         'Continue',
         'Cancel'
       )
