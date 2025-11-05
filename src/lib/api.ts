@@ -219,7 +219,7 @@ export const authApi = {
     api.post('api/v1/auth/logout').json()
 }
 
-// Coach tools API (MVP, localhost backend)
+// Coach tools API
 export const coachApi = {
   scriptwriter: (topic: string, audience?: string, brandVoice?: string) =>
     api.post('api/v1/coach/scriptwriter', { json: { topic, audience, brand_voice: brandVoice } }).json(),
