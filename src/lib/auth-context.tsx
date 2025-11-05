@@ -147,14 +147,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.setItem('auth_user', JSON.stringify(response.user))
         
         // Convert to User type for compatibility
-        const userData: User = {
-          id: response.user.user_id || 'single_client',
-          user_id: response.user.user_id || 'single_client',
-          email: response.user.email || '',
-          display_name: response.user.display_name || response.user.username || 'User',
-          avatar_url: response.user.avatar_url || null,
-          username: response.user.username || 'User'
-        }
+            const userData: User = {
+              id: response?.user?.user_id || 'single_client',
+              user_id: response?.user?.user_id || 'single_client',
+              email: response?.user?.email || '',
+              display_name: response?.user?.display_name || response?.user?.username || 'User',
+              avatar_url: response?.user?.avatar_url || null,
+              username: response?.user?.username || 'User'
+            }
         
         setUser(userData)
       } else {
