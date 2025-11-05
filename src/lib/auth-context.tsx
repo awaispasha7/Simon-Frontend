@@ -83,16 +83,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             // Then verify token is still valid by checking user info
             try {
               const { authApi } = await import('./api')
-              const userInfo = await authApi.getCurrentUser()
+              const userInfo = await authApi.getCurrentUser() as any
               
               // Update with fresh data from server
               const freshUserData: User = {
-                id: userInfo.user_id || userInfo.id,
-                user_id: userInfo.user_id || userInfo.id,
-                username: userInfo.username || 'User',
-                email: userInfo.email || '',
-                display_name: userInfo.display_name || userInfo.username || 'User',
-                avatar_url: userInfo.avatar_url || null
+                id: userInfo?.user_id || userInfo?.id,
+                user_id: userInfo?.user_id || userInfo?.id,
+                username: userInfo?.username || 'User',
+                email: userInfo?.email || '',
+                display_name: userInfo?.display_name || userInfo?.username || 'User',
+                avatar_url: userInfo?.avatar_url || null
               }
               
               setUser(freshUserData)
