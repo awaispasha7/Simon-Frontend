@@ -139,10 +139,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setIsLoading(true)
       const { authApi } = await import('./api')
-      const response = await authApi.login(username, password)
+      const response = await authApi.login(username, password) as any
       
       // Store token and user info
-      if (response.access_token) {
+      if (response?.access_token) {
         localStorage.setItem('auth_token', response.access_token)
         localStorage.setItem('auth_user', JSON.stringify(response.user))
         
