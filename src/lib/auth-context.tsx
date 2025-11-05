@@ -143,8 +143,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       // Store token and user info
       if (response?.access_token) {
-        localStorage.setItem('auth_token', response.access_token)
-        localStorage.setItem('auth_user', JSON.stringify(response.user))
+        localStorage.setItem('auth_token', response?.access_token || '')
+        localStorage.setItem('auth_user', JSON.stringify(response?.user || {}))
         
         // Convert to User type for compatibility
             const userData: User = {
