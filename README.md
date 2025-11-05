@@ -1,6 +1,6 @@
-# Frontend - Stories We Tell
+# Simon Chatbot - Frontend
 
-A modern Next.js frontend application for the Stories We Tell cinematic intake chatbot, built with TypeScript, Tailwind CSS, and React Query.
+A modern Next.js frontend application for the Simon Chatbot personal AI assistant, built with TypeScript, Tailwind CSS, and React Query.
 
 ## Features
 
@@ -25,7 +25,7 @@ A modern Next.js frontend application for the Stories We Tell cinematic intake c
 
 1. **Navigate to the frontend directory:**
    ```bash
-   cd stories-we-tell
+   cd Simon-Chatbot-Frontend
    ```
 
 2. **Install dependencies:**
@@ -42,7 +42,7 @@ A modern Next.js frontend application for the Stories We Tell cinematic intake c
 
 ## Environment Setup
 
-Create a `.env.local` file in the stories-we-tell directory:
+Create a `.env.local` file in the frontend directory:
 
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:8000
@@ -91,7 +91,7 @@ npm run analyze
 ## Project Structure
 
 ```
-stories-we-tell/
+Simon-Chatbot-Frontend/
 ├── src/
 │   ├── app/
 │   │   ├── chat/
@@ -309,4 +309,4 @@ The application can be deployed to any platform that supports Next.js:
 
 ## License
 
-This project is part of the Stories We Tell application suite.
+This is the frontend for the Simon Chatbot personal AI assistant application.

@@ -1,11 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { UserPlus, LogIn, Sparkles } from 'lucide-react'
+import { LogIn, Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface InteractiveButtonProps {
-  type: 'signup' | 'login' | 'new-story'
+  type: 'login' | 'new-story'
   onClick: () => void
   className?: string
 }
@@ -15,14 +15,6 @@ export function InteractiveButton({ type, onClick, className }: InteractiveButto
 
   const getButtonConfig = () => {
     switch (type) {
-      case 'signup':
-        return {
-          icon: UserPlus,
-          text: 'Sign Up',
-          gradient: 'from-purple-500 to-pink-500',
-          hoverGradient: 'from-purple-600 to-pink-600',
-          description: 'Create unlimited stories'
-        }
       case 'login':
         return {
           icon: LogIn,
@@ -68,7 +60,6 @@ export function InteractiveButton({ type, onClick, className }: InteractiveButto
 }
 
 interface ChatActionButtonsProps {
-  onSignup: () => void
   onLogin: () => void
   onNewStory?: () => void
   showNewStory?: boolean
@@ -76,7 +67,6 @@ interface ChatActionButtonsProps {
 }
 
 export function ChatActionButtons({ 
-  onSignup, 
   onLogin, 
   onNewStory, 
   showNewStory = false,
@@ -84,7 +74,6 @@ export function ChatActionButtons({
 }: ChatActionButtonsProps) {
   return (
     <div className={cn("flex flex-wrap gap-2 mt-3", className)}>
-      <InteractiveButton type="signup" onClick={onSignup} />
       <InteractiveButton type="login" onClick={onLogin} />
       {showNewStory && onNewStory && (
         <InteractiveButton type="new-story" onClick={onNewStory} />

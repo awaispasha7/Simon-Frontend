@@ -14,8 +14,8 @@ export default function Home() {
         // Authenticated users go to chat
         router.push('/chat')
       } else {
-        // Unauthenticated users can also go to chat to explore
-        router.push('/chat')
+        // Unauthenticated users must login first
+        router.push('/auth/login')
       }
     }
   }, [isAuthenticated, isLoading, router])

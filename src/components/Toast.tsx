@@ -17,7 +17,6 @@ export interface Toast {
   confirmText?: string
   cancelText?: string
   onLogin?: () => void
-  onSignup?: () => void
 }
 
 interface ToastProps {
@@ -289,23 +288,6 @@ function ToastComponent({ toast, onRemove }: ToastProps) {
               Login
             </button>
             <button
-              onClick={toast.onSignup}
-              className="px-4 py-2 text-sm font-semibold bg-linear-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-lg shadow-lg hover:shadow-xl hover:shadow-green-500/25 transition-all duration-200 transform hover:scale-105 active:scale-95 border border-green-500/20"
-              style={{
-                backgroundColor: isDarkMode ? '#16a34a' : undefined, // green-600
-                color: '#ffffff',
-                borderColor: isDarkMode ? '#22c55e' : undefined, // green-500
-                boxShadow: isDarkMode 
-                  ? '0 10px 15px -3px rgba(22, 163, 74, 0.4), 0 4px 6px -2px rgba(22, 163, 74, 0.2)' 
-                  : undefined,
-                padding: '0.5rem 1rem',
-                borderRadius: '0.5rem',
-                cursor: 'pointer',
-              }}
-            >
-              Sign Up
-            </button>
-            <button
               onClick={handleConfirm}
               className="px-4 py-2 text-sm font-semibold bg-linear-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white rounded-lg shadow-lg hover:shadow-xl hover:shadow-red-500/25 transition-all duration-200 transform hover:scale-105 active:scale-95 border border-red-500/20"
               style={{
@@ -457,7 +439,7 @@ export function useToast() {
       duration: 0 // No auto-dismiss for confirm dialogs
     })
 
-  const newChatWarning = (title: string, message: string, onConfirm: () => void, onCancel?: () => void, onLogin?: () => void, onSignup?: () => void, confirmText?: string, cancelText?: string) => 
+  const newChatWarning = (title: string, message: string, onConfirm: () => void, onCancel?: () => void, onLogin?: () => void, confirmText?: string, cancelText?: string) => 
     addToast({ 
       type: 'new-chat-warning', 
       title, 
@@ -465,7 +447,6 @@ export function useToast() {
       onConfirm, 
       onCancel, 
       onLogin,
-      onSignup,
       confirmText, 
       cancelText,
       duration: 0 // No auto-dismiss for warning dialogs

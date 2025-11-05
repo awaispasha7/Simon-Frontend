@@ -21,7 +21,6 @@ export type BubbleProps = {
   role: 'user'|'assistant'
   content: string
   showActionButtons?: boolean
-  onSignup?: () => void
   onLogin?: () => void
   onNewStory?: () => void
   attachedFiles?: AttachedFile[]
@@ -33,7 +32,6 @@ export function MessageBubble({
   role, 
   content, 
   showActionButtons = false,
-  onSignup,
   onLogin,
   onNewStory,
   attachedFiles,
@@ -51,33 +49,47 @@ export function MessageBubble({
   }, [])
   return (
     <div className={cn(
-      'flex w-full gap-3 animate-in slide-in-from-bottom-2 duration-300',
+      'flex w-full gap-4 animate-in slide-in-from-bottom-2 duration-300',
       isUser ? 'justify-end' : 'justify-start'
     )} style={{
-      marginTop: '16px',
-      marginBottom: '16px'
+      marginTop: '20px',
+      marginBottom: '20px',
+      paddingLeft: '24px',
+      paddingRight: '24px'
     }}>
       {!isUser && (
-        <div className="h-9 w-9 mt-1 shrink-0 ring-2 ring-green-200 rounded-full flex items-center justify-center" style={{ marginLeft: '16px', marginTop: '16px' }}>
-          <div className="bg-linear-to-br from-green-200 to-green-300 text-green-800 text-xs font-bold shadow-sm rounded-full w-full h-full flex items-center justify-center">
-            <Image 
-              src="/swt-logo.svg" 
-              alt="SWT Assistant" 
-              width={36} 
-              height={36}
-              className="w-9 h-9"
-            />
+        <div className={cn(
+          "h-10 w-10 mt-1 shrink-0 rounded-lg flex items-center justify-center",
+          resolvedTheme === 'light'
+            ? "bg-gray-100 border border-gray-300"
+            : "bg-zinc-950 border border-zinc-800"
+        )} style={{ marginLeft: '8px' }}>
+          <div className={cn(
+            "text-xs font-bold rounded-lg w-full h-full flex items-center justify-center",
+            resolvedTheme === 'light'
+              ? "bg-gray-100 text-gray-700"
+              : "bg-zinc-900 text-zinc-300"
+          )}>
+            <span className="text-lg">✨</span>
           </div>
         </div>
       )}
       <div className={cn(
-        'max-w-[70%] rounded-xl px-8 py-6 text-sm leading-relaxed transform transition-all duration-200 hover:scale-[1.02] relative group',
+        'max-w-[75%] rounded-2xl px-6 py-5 text-base leading-relaxed transform transition-all duration-200 relative group',
+        'break-words', // Ensure proper text wrapping
         isUser
-          ? 'bg-linear-to-br from-blue-500 via-blue-600 to-blue-700 text-white rounded-br-lg shadow-2xl shadow-blue-500/40 border-2 border-blue-400/40'
+          ? resolvedTheme === 'light'
+            ? 'bg-gray-100 text-gray-900 rounded-tr-none shadow-md border border-gray-300' // Same white background as assistant in light mode
+            : 'bg-zinc-900 text-white rounded-tr-none shadow-lg border border-zinc-800'
           : resolvedTheme === 'light'
-            ? 'bg-linear-to-br from-gray-100 via-gray-50 to-white text-gray-900 backdrop-blur-sm border-2 border-gray-200 rounded-bl-lg shadow-2xl shadow-gray-300/30'
-            : 'bg-linear-to-br from-slate-800 via-slate-700 to-slate-600 text-slate-100 backdrop-blur-sm border-2 border-slate-500/70 rounded-bl-lg shadow-2xl shadow-slate-400/30'
-      )}>
+            ? 'bg-gray-100 text-gray-900 rounded-tl-none shadow-md border border-gray-300' // Changed to gray-100 for better contrast and readability
+            : 'bg-black text-zinc-200 rounded-tl-none shadow-xl border border-zinc-900'
+      )} style={{
+        wordBreak: 'break-word',
+        overflowWrap: 'anywhere',
+        hyphens: 'auto',
+        minWidth: 0 // Ensure flex items can shrink below content size
+      }}>
         {/* Attached Files Display - Above message content */}
         {attachedFiles && attachedFiles.length > 0 && (
           <div className="mb-3 ml-2 mr-2">
@@ -91,21 +103,24 @@ export function MessageBubble({
           </div>
         )}
         
-        <div className="whitespace-pre-wrap leading-relaxed wrap-break-words" style={{ 
-          marginLeft: '10px',
-          marginRight: isUser ? '10px' : '10px'
-        }}>
-          {content}
-        </div>
+                <div className="whitespace-pre-wrap leading-relaxed break-words font-light" style={{ 
+                  letterSpacing: '0.01em',
+                  lineHeight: '1.7',
+                  wordBreak: 'break-word',
+                  overflowWrap: 'break-word',
+                  hyphens: 'auto',
+                  maxWidth: '100%'
+                }}>
+                  {content}
+                </div>
         
         {/* Action buttons for assistant messages */}
-        {!isUser && showActionButtons && onSignup && onLogin && (
+        {!isUser && showActionButtons && onLogin && (
           <div style={{ 
             marginLeft: '10px',
             marginRight: '10px'
           }}>
             <ChatActionButtons
-              onSignup={onSignup}
               onLogin={onLogin}
               onNewStory={onNewStory}
               showNewStory={!!onNewStory}
@@ -114,12 +129,9 @@ export function MessageBubble({
         )}
         
         <div className={cn(
-          'text-xs mt-2 opacity-70 ',
-          isUser ? 'text-white/70' : resolvedTheme === 'light' ? 'text-gray-500' : 'text-slate-300'
-        )} style={{ 
-          marginLeft: '10px',
-          marginRight: isUser ? '10px' : '10px'
-        }}>
+          'text-xs mt-3 opacity-50 font-mono tracking-wider',
+          isUser ? 'text-zinc-400' : resolvedTheme === 'light' ? 'text-gray-400' : 'text-zinc-500'
+        )}>
           {timestamp}
         </div>
         
@@ -151,18 +163,28 @@ export function MessageBubble({
         )}
       </div>
       {isUser && (
-        <div className="h-9 w-9 mt-1 shrink-0 ring-2 ring-blue-200 rounded-full flex items-center justify-center" style={{ marginRight: '16px' }}>
-          <div className="bg-linear-to-br from-blue-200 to-blue-300 text-blue-800 text-xs font-bold shadow-sm rounded-full w-full h-full flex items-center justify-center">
+        <div className={cn(
+          "h-10 w-10 mt-1 shrink-0 rounded-lg flex items-center justify-center",
+          resolvedTheme === 'light'
+            ? "bg-gray-100 border border-gray-300"
+            : "bg-zinc-950 border border-zinc-800"
+        )} style={{ marginRight: '8px' }}>
+          <div className={cn(
+            "text-xs font-bold rounded-lg w-full h-full flex items-center justify-center border",
+            resolvedTheme === 'light'
+              ? "bg-white text-gray-700 border-gray-300"
+              : "bg-zinc-900 text-zinc-300 border-zinc-800"
+          )}>
             {isHydrated && profile.userImage ? (
               <Image 
                 src={profile.userImage} 
-                alt="User Profile" 
-                width={24} 
-                height={24}
-                className="w-6 h-6 rounded-full object-cover"
+                alt="User" 
+                width={32} 
+                height={32}
+                className="w-8 h-8 rounded-lg object-cover"
               />
             ) : (
-              isHydrated ? profile.userName.charAt(0).toUpperCase() : 'U'
+              <span className={resolvedTheme === 'light' ? 'text-gray-600' : 'text-zinc-400'}>{isHydrated ? profile.userName.charAt(0).toUpperCase() : 'U'}</span>
             )}
           </div>
         </div>

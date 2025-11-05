@@ -3,54 +3,25 @@
 import { useEffect, useState } from 'react'
 import { Topbar } from '@/components/Topbar'
 import { ChatPanel } from '@/components/ChatPanel'
-import { SidebarDossier } from '@/components/SidebarDossier'
 import { SessionsSidebar } from '@/components/SessionsSidebar'
 import { ResizableSidebar } from '@/components/ResizableSidebar'
-import { LoginPromptModal } from '@/components/LoginPromptModal'
+import { AuthGuard } from '@/components/AuthGuard'
 import { useChatStore } from '@/lib/store'
-import { DossierProvider } from '@/lib/dossier-context'
 import { useTheme, getThemeColors } from '@/lib/theme-context'
 import { sessionSyncManager } from '@/lib/session-sync'
-import { MessageSquare, FileText } from 'lucide-react'
+import { MessageSquare } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { useAuth } from '@/lib/auth-context'
-import { useRouter } from 'next/navigation'
 
 export default function ChatPage() {
   const init = useChatStore(s => s.init)
-  const [activeTab, setActiveTab] = useState<'sessions' | 'dossier'>('sessions')
   const [currentSessionId, setCurrentSessionId] = useState<string>('')
   const [currentProjectId, setCurrentProjectId] = useState<string>('')
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
-  const [showLoginModal, setShowLoginModal] = useState(false)
-  const [loginModalTrigger, setLoginModalTrigger] = useState<'new-story' | 'session-start' | 'story-complete'>('session-start')
   const [showSidebarHint, setShowSidebarHint] = useState(false)
   const { resolvedTheme } = useTheme()
   const colors = getThemeColors(resolvedTheme)
-  const { user, isAuthenticated } = useAuth()
-  const router = useRouter()
 
   useEffect(() => { init() }, [init])
-
-  // Show login modal for anonymous users at session start
-  useEffect(() => {
-    // Only show modal for anonymous users (not authenticated)
-    if (!isAuthenticated && !user) {
-      // Check if user has seen the modal before (localStorage)
-      const hasSeenModal = localStorage.getItem('stories_we_tell_seen_login_modal')
-      // Temporarily comment out for testing - uncomment for production
-      if (!hasSeenModal) {
-      // if (true) { // Always show for testing
-        // Show modal after a short delay to let the page load
-        const timer = setTimeout(() => {
-          setLoginModalTrigger('session-start')
-          setShowLoginModal(true)
-        }, 2000) // 2 second delay
-        
-        return () => clearTimeout(timer)
-      }
-    }
-  }, [isAuthenticated, user])
 
   // Show sidebar hint for new users on mobile
   useEffect(() => {
@@ -139,47 +110,17 @@ export default function ChatPage() {
   }
 
   // Modal handlers
-  const handleCloseModal = () => {
-    setShowLoginModal(false)
-    // Mark that user has seen the modal
-    localStorage.setItem('stories_we_tell_seen_login_modal', 'true')
-  }
-
-  const handleSignup = () => {
-    setShowLoginModal(false)
-    router.push('/auth/signup')
-  }
-
-  const handleLogin = () => {
-    setShowLoginModal(false)
-    router.push('/auth/login')
-  }
-
   const handleNewStoryClick = () => {
-    if (!isAuthenticated) {
-      setLoginModalTrigger('new-story')
-      setShowLoginModal(true)
-    } else {
-      // For authenticated users, create new story
-      // Clear localStorage to prevent restoring old session
-      try {
-        localStorage.removeItem('stories_we_tell_session')
-        console.log('🆕 [PAGE] Cleared localStorage for new story')
-      } catch (error) {
-        console.error('Failed to clear localStorage:', error)
-      }
-      
-      setCurrentSessionId('')
-      setCurrentProjectId('')
-      
-      // Close sidebar on mobile after creating new story
-      // This provides immediate feedback that the action worked
-      setIsSidebarCollapsed(true)
-    }
+    try {
+      localStorage.removeItem('stories_we_tell_session')
+    } catch {}
+    setCurrentSessionId('')
+    setCurrentProjectId('')
+    setIsSidebarCollapsed(true)
   }
 
   return (
-    <DossierProvider>
+    <AuthGuard>
       <div className={`h-screen w-screen overflow-hidden ${colors.background} flex flex-col`}>
         {/* Topbar - Full width across entire screen */}
         <div className="shrink-0">
@@ -197,52 +138,23 @@ export default function ChatPage() {
             isCollapsed={isSidebarCollapsed}
             onCollapseChange={setIsSidebarCollapsed}
           >
-            {/* Enhanced Sidebar Switch */}
-            <div className="sidebar-switch-container">
-              <button
-                onClick={() => setActiveTab('sessions')}
-                className={cn(
-                  "sidebar-switch-button",
-                  activeTab === 'sessions' && "active"
-                )}
-              >
-                <MessageSquare className="sidebar-switch-icon" />
+            <div className="h-full">
+              <div className="px-3 py-2 text-xs uppercase tracking-wide opacity-70 flex items-center gap-2">
+                <MessageSquare className="w-3 h-3" />
                 Chats
-              </button>
-              <button
-                onClick={() => setActiveTab('dossier')}
-                className={cn(
-                  "sidebar-switch-button",
-                  activeTab === 'dossier' && "active"
-                )}
-              >
-                <FileText className="sidebar-switch-icon" />
-                Dossier
-              </button>
-            </div>
-            
-            {/* Sidebar Content */}
-            <div className="h-[calc(100%-60px)]">
-              {activeTab === 'sessions' ? (
-                <SessionsSidebar 
-                  onSessionSelect={handleSessionSelect}
-                  currentSessionId={currentSessionId}
-                  onClose={handleSidebarClose}
-                  onNewStory={handleNewStoryClick}
-                />
-              ) : (
-                <SidebarDossier 
-                  sessionId={currentSessionId}
-                  projectId={currentProjectId}
-                  onClose={handleSidebarClose}
-                />
-              )}
+              </div>
+              <SessionsSidebar 
+                onSessionSelect={handleSessionSelect}
+                currentSessionId={currentSessionId}
+                onClose={handleSidebarClose}
+                onNewStory={handleNewStoryClick}
+              />
             </div>
           </ResizableSidebar>
 
           {/* Chat Area */}
-          <div className={`flex-1 min-h-0 p-4 ${isSidebarCollapsed ? 'block' : 'hidden sm:block'}`}>
-            <div className={`w-full h-full ${colors.cardBackground} ${colors.cardBorder} border rounded-2xl shadow-lg overflow-hidden flex flex-col`}>
+          <div className={`flex-1 min-h-0 ${isSidebarCollapsed ? 'block' : 'hidden sm:block'}`}>
+            <div className={`w-full h-full ${colors.background} overflow-hidden flex flex-col`}>
               <ChatPanel 
                 _sessionId={currentSessionId} 
                 _projectId={currentProjectId} 
@@ -258,15 +170,6 @@ export default function ChatPage() {
           </div>
         </div>
       </div>
-
-      {/* Login Prompt Modal */}
-      <LoginPromptModal
-        isOpen={showLoginModal}
-        onClose={handleCloseModal}
-        onSignup={handleSignup}
-        onLogin={handleLogin}
-        trigger={loginModalTrigger}
-      />
 
       {/* Sidebar Hint for Mobile Users */}
       {showSidebarHint && (
@@ -320,7 +223,7 @@ export default function ChatPage() {
           </div>
         </div>
       )}
-    </DossierProvider>
+    </AuthGuard>
   )
 }
 

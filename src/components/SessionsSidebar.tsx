@@ -49,23 +49,13 @@ export function SessionsSidebar({ onSessionSelect, currentSessionId, onClose, on
     return () => window.removeEventListener('sessionUpdated', handleSessionUpdate)
   }, [queryClient])
 
-      // Fetch user sessions only if authenticated
+      // Fetch user sessions - simplified for single-user personal assistant
       const { data: sessions = [], isLoading, error } = useQuery({
         queryKey: ['sessions'],
         queryFn: async () => {
           try {
-            // Wait for user to be loaded before making API call
-            if (!user?.user_id) {
-              // Add a small delay to ensure user data is fully loaded
-              await new Promise(resolve => setTimeout(resolve, 100))
-              if (!user?.user_id) {
-                throw new Error('User not loaded yet')
-              }
-            }
-            
-            // User creation is handled by the backend when needed
-            // No need to create user here as it can interfere with session management
-            
+            // For single-user personal assistant, always fetch sessions
+            // Backend uses fixed user ID automatically
             const result = await sessionApi.getSessions(20)
             console.log('📋 Raw sessions result:', result)
             
@@ -130,11 +120,11 @@ export function SessionsSidebar({ onSessionSelect, currentSessionId, onClose, on
           }
         },
         refetchInterval: false, // No automatic refresh
-        refetchOnWindowFocus: false, // Don't refetch on window focus
-        refetchOnMount: true, // Only fetch on component mount
-        staleTime: 0, // Always consider data stale to ensure fresh data after mutations
-        enabled: isAuthenticated && !!user?.user_id, // Only fetch if user is authenticated and loaded
-        retry: false, // Don't retry on error to avoid repeated calls
+        refetchOnWindowFocus: true, // Refetch on window focus to get latest sessions
+        refetchOnMount: true, // Fetch on component mount
+        staleTime: 30 * 1000, // Consider data fresh for 30 seconds
+        enabled: isAuthenticated, // Only fetch when authenticated
+        retry: 2, // Retry twice on error
       })
 
   // Delete session mutation
@@ -309,17 +299,17 @@ export function SessionsSidebar({ onSessionSelect, currentSessionId, onClose, on
 
       if (isLoading) {
         return (
-          <div className="h-full flex flex-col">
-            <div className={`p-4 border-b ${colors.border}`}>
+          <div className="h-full flex flex-col px-4 py-3 sm:px-5 sm:py-4">
+            <div className={`pb-4 border-b ${colors.border} mb-4`}>
               <div className="flex items-center justify-between mb-3">
-                <h2 className={`text-lg font-semibold ${colors.text} flex items-center gap-2`}>
-                  <MessageSquare className="h-5 w-5" />
+                <h2 className={`text-sm font-medium ${colors.text} flex items-center gap-2 uppercase tracking-wider`}>
+                  <MessageSquare className="h-4 w-4" />
                   Previous Chats
                 </h2>
               </div>
               <p className={`text-sm ${colors.textSecondary}`}>Loading chats...</p>
             </div>
-            <div className="p-4">
+            <div>
               <div className="animate-pulse space-y-3">
                 {[...Array(3)].map((_, i) => (
                   <div key={i} className={`h-16 ${colors.backgroundTertiary} rounded-lg`}></div>
@@ -332,16 +322,16 @@ export function SessionsSidebar({ onSessionSelect, currentSessionId, onClose, on
 
       if (error) {
         return (
-          <div className="h-full flex flex-col">
-            <div className={`p-4 border-b ${colors.border}`}>
+          <div className="h-full flex flex-col px-4 py-3 sm:px-5 sm:py-4">
+            <div className={`pb-4 border-b ${colors.border} mb-4`}>
               <div className="flex items-center justify-between mb-3">
-                <h2 className={`text-lg font-semibold ${colors.text} flex items-center gap-2`}>
-                  <MessageSquare className="h-5 w-5" />
+                <h2 className={`text-sm font-medium ${colors.text} flex items-center gap-2 uppercase tracking-wider`}>
+                  <MessageSquare className="h-4 w-4" />
                   Previous Chats
                 </h2>
               </div>
             </div>
-            <div className="p-4">
+            <div>
               <div className="text-center py-8">
                 <h3 className={`text-lg font-medium ${colors.text} mb-2`}>No previous chats found</h3>
                 <p className={`${colors.textSecondary} text-sm mb-4`}>
@@ -353,21 +343,21 @@ export function SessionsSidebar({ onSessionSelect, currentSessionId, onClose, on
         )
       }
 
-  return (
-    <div className="h-full flex flex-col gap-8" style={{ padding: '0.2rem 0.8rem' }}>
+          return (
+            <div className="h-full flex flex-col px-4 py-3 sm:px-5 sm:py-4">
       {/* Header */}
-      <div className={`p-6 border-b ${colors.border}`}>
-        <div className="flex items-center justify-between mb-6">
-          <h2 className={`text-lg font-semibold ${colors.text} flex items-center gap-2`}>
-            <MessageSquare className="h-5 w-5" />
+      <div className={`pb-4 border-b ${colors.border} mb-4`}>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className={`text-sm font-medium ${colors.text} flex items-center gap-2 uppercase tracking-wider`}>
+            <MessageSquare className="h-4 w-4" />
             Previous Chats
           </h2>
           <div className="flex items-center gap-2">
             {/* New Story/Chat Button */}
             <button
               onClick={onNewStory}
-              className="p-2 rounded-lg bg-linear-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 hover:cursor-pointer"
-              title={isAuthenticated ? "Create New Story" : "Create New Story (Sign up required)"}
+              className={`p-2 rounded-lg ${colors.buttonPrimary} transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 hover:cursor-pointer`}
+              title={isAuthenticated ? "Create New Chat" : "Create New Chat"}
             >
               <Plus className="h-4 w-4" />
             </button>
@@ -402,7 +392,7 @@ export function SessionsSidebar({ onSessionSelect, currentSessionId, onClose, on
       </div>
 
       {/* Sessions List */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-4">
+      <div className="flex-1 overflow-y-auto space-y-2">
         {(sessions as Session[]).length === 0 ? (
           <div className="text-center py-8 flex flex-col gap-4 items-center justify-center mt-8">
             {isAuthenticated ? (
@@ -414,82 +404,19 @@ export function SessionsSidebar({ onSessionSelect, currentSessionId, onClose, on
               </>
             ) : (
               <>
-                <h3 className={`text-lg font-medium ${colors.text} mb-2`}>Welcome to Stories We Tell</h3>
+                <h3 className={`text-lg font-medium ${colors.text} mb-2`}>Welcome</h3>
                 <p className={`${colors.textSecondary} text-sm mb-8`}>
-                  Sign up to save your conversations and access your story development history
+                  Sign in to save your conversations and access your chat history
                 </p>
                 
                 {/* Beautiful Auth buttons in single line */}
                 <div className="flex gap-3 w-full mt-8 px-4 justify-center items-center">
                   <button
                     onClick={() => router.push('/auth/login')}
-                    style={{
-                      background: 'linear-gradient(to right, #3b82f6, #2563eb)',
-                      color: 'white',
-                      fontWeight: '600',
-                      padding: '8px 16px',
-                      borderRadius: '9999px',
-                      border: 'none',
-                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '8px',
-                      cursor: 'pointer',
-                      transition: 'all 0.3s ease',
-                      fontSize: '13px'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = 'linear-gradient(to right, #2563eb, #1d4ed8)'
-                      e.currentTarget.style.transform = 'scale(1.05)'
-                      e.currentTarget.style.boxShadow = '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = 'linear-gradient(to right, #3b82f6, #2563eb)'
-                      e.currentTarget.style.transform = 'scale(1)'
-                      e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'
-                    }}
+                    className={`px-4 py-2 rounded-full ${colors.buttonPrimary} flex items-center gap-2 text-sm`}
                   >
                     <LogIn style={{ width: '16px', height: '16px' }} />
                     <span>Sign In</span>
-                  </button>
-                  
-                  {/* Beautiful Divider */}
-                  <div className="flex items-center justify-center px-1">
-                    <div className="w-0.5 h-10 bg-linear-to-b from-transparent via-white/50 to-transparent rounded-full"></div>
-                  </div>
-                  
-                  <button
-                    onClick={() => router.push('/auth/signup')}
-                    style={{
-                      background: 'linear-gradient(to right, #10b981, #059669)',
-                      color: 'white',
-                      fontWeight: '600',
-                      padding: '8px 16px',
-                      borderRadius: '9999px',
-                      border: 'none',
-                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '8px',
-                      cursor: 'pointer',
-                      transition: 'all 0.3s ease',
-                      fontSize: '13px'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = 'linear-gradient(to right, #059669, #047857)'
-                      e.currentTarget.style.transform = 'scale(1.05)'
-                      e.currentTarget.style.boxShadow = '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = 'linear-gradient(to right, #10b981, #059669)'
-                      e.currentTarget.style.transform = 'scale(1)'
-                      e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'
-                    }}
-                  >
-                    <UserPlus style={{ width: '16px', height: '16px' }} />
-                    <span>Sign Up</span>
                   </button>
                 </div>
               </>
@@ -499,14 +426,14 @@ export function SessionsSidebar({ onSessionSelect, currentSessionId, onClose, on
           (sessions as Session[]).map((session: Session) => (
             <div
               key={session.session_id}
-              className={`group cursor-pointer transition-all duration-200 hover:shadow-md rounded-lg border ${
+              className={`group cursor-pointer transition-all duration-200 rounded-lg border ${
                 currentSessionId === session.session_id
-                  ? 'ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                  ? `${colors.sidebarItemActive} ${colors.border}`
                   : `${colors.sidebarItem} ${colors.border}`
               }`}
               style={{ 
-                padding: '0.5rem 1rem',
-                margin: '0.3rem'
+                padding: '0.75rem 1rem',
+                margin: '0.2rem 0'
               }}
               onClick={() => {
                 console.log('📋 Previous chat clicked:', session.session_id, 'Project:', session.project_id)

@@ -107,95 +107,95 @@ export function ThemeProvider({
 export const getThemeColors = (resolvedTheme: 'light' | 'dark') => {
   if (resolvedTheme === 'light') {
     return {
-      // Background colors
-      background: 'bg-white',
-      backgroundSecondary: 'bg-gray-50',
+      // Background colors - Clean, modern light theme
+      background: 'bg-gray-50',
+      backgroundSecondary: 'bg-white',
       backgroundTertiary: 'bg-gray-100',
       
-      // Text colors
+      // Text colors - High contrast
       text: 'text-gray-900',
-      textSecondary: 'text-gray-600',
-      textTertiary: 'text-gray-500',
-      textMuted: 'text-gray-400',
+      textSecondary: 'text-gray-700',
+      textTertiary: 'text-gray-600',
+      textMuted: 'text-gray-500',
       
-      // Border colors
+      // Border colors - Subtle borders
       border: 'border-gray-200',
       borderSecondary: 'border-gray-300',
       
-      // Input colors
+      // Input colors - Clean white with subtle borders
       inputBackground: 'bg-white',
       inputBorder: 'border-gray-300',
       inputFocus: 'border-blue-500',
-      inputPlaceholder: 'placeholder-gray-400',
+      inputPlaceholder: 'placeholder-gray-500',
       
-      // Button colors
-      buttonPrimary: 'bg-blue-600 hover:bg-blue-700 text-white',
-      buttonSecondary: 'bg-gray-200 hover:bg-gray-300 text-gray-900',
-      buttonGhost: 'hover:bg-gray-100 text-gray-700',
+      // Button colors - Modern, vibrant
+      buttonPrimary: 'bg-gray-900 hover:bg-gray-800 text-white border border-gray-800',
+      buttonSecondary: 'bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-300',
+      buttonGhost: 'hover:bg-gray-100 text-gray-700 border border-transparent hover:border-gray-300',
       
-      // Message colors
-      messageUser: 'bg-blue-500 text-white',
-      messageAssistant: 'bg-gray-100 text-gray-900',
+      // Message colors - Clean distinction
+      messageUser: 'bg-gray-900 text-white border border-gray-800',
+      messageAssistant: 'bg-white text-gray-900 border border-gray-200',
       messageTimestamp: 'text-gray-500',
       
       // Card colors
       cardBackground: 'bg-white',
       cardBorder: 'border-gray-200',
       
-      // Sidebar colors
+      // Sidebar colors - Light sidebar
       sidebarBackground: 'bg-gray-50',
-      sidebarItem: 'hover:bg-gray-100',
-      sidebarItemActive: 'bg-gray-200',
+      sidebarItem: 'hover:bg-gray-100 border-l-2 border-transparent hover:border-gray-300',
+      sidebarItemActive: 'bg-gray-100 border-l-2 border-gray-900',
       
       // Glassmorphism
-      glassBackground: 'bg-white/80',
-      glassBorder: 'border-white/20',
+      glassBackground: 'bg-white/95 backdrop-blur-xl',
+      glassBorder: 'border-gray-200/50',
     }
   } else {
     return {
-      // Background colors
-      background: 'bg-slate-950',
-      backgroundSecondary: 'bg-slate-900',
-      backgroundTertiary: 'bg-slate-800',
+      // Background colors - Ultra dark black theme
+      background: 'bg-black',
+      backgroundSecondary: 'bg-zinc-950',
+      backgroundTertiary: 'bg-zinc-900',
       
-      // Text colors
-      text: 'text-slate-100',
-      textSecondary: 'text-slate-300',
-      textTertiary: 'text-slate-400',
-      textMuted: 'text-slate-500',
+      // Text colors - High contrast whites
+      text: 'text-white',
+      textSecondary: 'text-zinc-400',
+      textTertiary: 'text-zinc-500',
+      textMuted: 'text-zinc-600',
       
-      // Border colors
-      border: 'border-slate-700',
-      borderSecondary: 'border-slate-600',
+      // Border colors - Subtle dark borders
+      border: 'border-zinc-900',
+      borderSecondary: 'border-zinc-800',
       
-      // Input colors
-      inputBackground: 'bg-slate-800',
-      inputBorder: 'border-slate-600',
-      inputFocus: 'border-sky-400',
-      inputPlaceholder: 'placeholder-slate-400',
+      // Input colors - Dark charcoal
+      inputBackground: 'bg-zinc-950',
+      inputBorder: 'border-zinc-800',
+      inputFocus: 'border-zinc-600',
+      inputPlaceholder: 'placeholder-zinc-600',
       
-      // Button colors
-      buttonPrimary: 'bg-sky-600 hover:bg-sky-700 text-white',
-      buttonSecondary: 'bg-slate-700 hover:bg-slate-600 text-slate-200',
-      buttonGhost: 'hover:bg-slate-800 text-slate-300',
+      // Button colors - Dark with subtle glow
+      buttonPrimary: 'bg-zinc-900 hover:bg-zinc-800 text-white border border-zinc-800',
+      buttonSecondary: 'bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800',
+      buttonGhost: 'hover:bg-zinc-900 text-zinc-400 border border-transparent hover:border-zinc-800',
       
-      // Message colors
-      messageUser: 'bg-blue-500 text-white',
-      messageAssistant: 'bg-slate-800 text-slate-100',
-      messageTimestamp: 'text-slate-300',
+      // Message colors - Darker with contrast
+      messageUser: 'bg-zinc-900 text-white border border-zinc-800',
+      messageAssistant: 'bg-black text-zinc-200 border border-zinc-900',
+      messageTimestamp: 'text-zinc-500',
       
       // Card colors
-      cardBackground: 'bg-slate-800',
-      cardBorder: 'border-slate-700',
+      cardBackground: 'bg-zinc-950',
+      cardBorder: 'border-zinc-900',
       
-      // Sidebar colors
-      sidebarBackground: 'bg-slate-900',
-      sidebarItem: 'hover:bg-slate-800',
-      sidebarItemActive: 'bg-slate-700',
+      // Sidebar colors - Pure black
+      sidebarBackground: 'bg-black',
+      sidebarItem: 'hover:bg-zinc-950 border-l-2 border-transparent hover:border-zinc-800',
+      sidebarItemActive: 'bg-zinc-950 border-l-2 border-zinc-700',
       
       // Glassmorphism
-      glassBackground: 'bg-slate-800/50',
-      glassBorder: 'border-slate-600/50',
+      glassBackground: 'bg-zinc-950/90 backdrop-blur-xl',
+      glassBorder: 'border-zinc-900/50',
     }
   }
 }

@@ -17,6 +17,34 @@ export async function POST(req: NextRequest) {
       console.log(`Frontend: Edit mode - deleting from message_id: ${edit_from_message_id}`)
     }
     
+    // Slash-command handling: route to coach tools endpoints
+    const lower = (text || '').trim().toLowerCase()
+    const isSlash = lower.startsWith('/')
+
+    if (isSlash) {
+      let path = ''
+      if (lower.startsWith('/scriptwriter')) path = '/api/v1/coach/scriptwriter'
+      else if (lower.startsWith('/competitorrewrite')) path = '/api/v1/coach/competitorrewrite'
+      else if (lower.startsWith('/avatar_refine')) path = '/api/v1/coach/avatar_refine'
+      else if (lower.startsWith('/northstar_editor')) path = '/api/v1/coach/northstar_editor'
+      else if (lower.startsWith('/contentplanner')) path = '/api/v1/coach/contentplanner'
+
+      if (path) {
+        const payload = { topic: text.replace(/^[^\s]+\s*/, ''), transcript: text.replace(/^[^\s]+\s*/, ''), doc: text.replace(/^[^\s]+\s*/, ''), pillars: undefined }
+        const r = await fetch(`${backendUrl}${path}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+        const data = await r.json()
+        const content = JSON.stringify(data)
+        return new Response(
+          `data: ${JSON.stringify({ type: 'content', content, done: true })}\n\n`,
+          { status: 200, headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive' } }
+        )
+      }
+    }
+
     // Try to call the backend with a timeout
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), 60000) // 60 second timeout

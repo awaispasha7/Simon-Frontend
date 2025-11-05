@@ -9,7 +9,7 @@ interface ToastContextType {
   warning: (title: string, message?: string, duration?: number) => string
   info: (title: string, message?: string, duration?: number) => string
   confirm: (title: string, message: string, onConfirm: () => void, onCancel?: () => void, confirmText?: string, cancelText?: string) => string
-  newChatWarning: (title: string, message: string, onConfirm: () => void, onCancel?: () => void, onLogin?: () => void, onSignup?: () => void, confirmText?: string, cancelText?: string) => string
+  newChatWarning: (title: string, message: string, onConfirm: () => void, onCancel?: () => void, onLogin?: () => void, confirmText?: string, cancelText?: string) => string
   addToast: (toast: Omit<Toast, 'id'>) => string
   removeToast: (id: string) => void
 }

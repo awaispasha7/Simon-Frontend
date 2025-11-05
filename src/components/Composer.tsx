@@ -83,8 +83,10 @@ export function Composer({ onSend, disabled = false, sessionId, projectId, editC
   }, [attachedFiles.length])
 
   const handleSend = () => {
+    // Allow sending if there's text OR attached files
     if ((!text.trim() && attachedFiles.length === 0) || disabled) return
-    onSend(text.trim(), attachedFiles.length > 0 ? attachedFiles : undefined)
+    // Send with text (even if empty) and attached files
+    onSend(text.trim() || '', attachedFiles.length > 0 ? attachedFiles : undefined)
     setText('')
     setAttachedFiles([])
     // Clear edit state when message is sent
@@ -103,14 +105,18 @@ export function Composer({ onSend, disabled = false, sessionId, projectId, editC
   const handleAudioData = (audioBlob: Blob, transcript: string) => {
     console.log('🎤 [COMPOSER] handleAudioData called with transcript:', transcript.substring(0, 50) + '...')
     console.log('🎤 [COMPOSER] Current sessionId:', sessionId, 'projectId:', projectId)
+    console.log('🎤 [COMPOSER] Attached files:', attachedFiles.length)
     setShowAudioRecorder(false)
-    // Auto-send the transcribed text and clear the input
-    if (transcript.trim()) {
-      console.log('🎤 [COMPOSER] Calling onSend with transcript - ensuring session context is maintained')
+    // Auto-send the transcribed text with any attached files
+    // Send even if transcript is empty if there are files attached
+    if (transcript.trim() || attachedFiles.length > 0) {
+      console.log('🎤 [COMPOSER] Calling onSend with transcript and attached files - ensuring session context is maintained')
       // Add a small delay to ensure session state is stable
       setTimeout(() => {
-        onSend(transcript)
+        // Send transcript (or empty string) with attached files
+        onSend(transcript.trim() || '', attachedFiles.length > 0 ? attachedFiles : undefined)
         setText('') // Clear the text area after sending
+        setAttachedFiles([]) // Clear attached files after sending
       }, 100)
     }
   }
@@ -133,7 +139,7 @@ export function Composer({ onSend, disabled = false, sessionId, projectId, editC
   // }, [text])
 
   return (
-    <div className="p-2 sm:p-3">
+    <div className="p-4 sm:p-5 md:p-6">
       {/* Attachment Preview - Above the composer */}
       {attachedFiles.length > 0 && (
         <div className="mb-3">
@@ -141,7 +147,7 @@ export function Composer({ onSend, disabled = false, sessionId, projectId, editC
         </div>
       )}
       
-      <div className={`relative flex items-center backdrop-blur-sm rounded-t-none rounded-b-2xl p-1.5 sm:p-2 md:p-3 border ${colors.glassBorder} shadow-lg overflow-visible`} style={{ backgroundColor: resolvedTheme === 'light' ? 'rgba(255, 255, 255, 0.8)' : 'rgb(83, 93, 108)' }}>
+      <div className={`relative flex items-center rounded-none p-2 sm:p-3 md:p-4 border-t ${colors.border} ${colors.inputBackground} overflow-visible`}>
         <UploadDropzone sessionId={sessionId} projectId={projectId} onFileAttached={handleFileAttached} />
           <div className="relative">
             {!showAudioRecorder ? (
@@ -153,15 +159,15 @@ export function Composer({ onSend, disabled = false, sessionId, projectId, editC
                 }}
                 disabled={disabled}
                 className={cn(
-                  "h-10 w-10 sm:h-[56px] sm:w-[56px] hover:scale-105 active:scale-95 transition-all duration-200 rounded-lg sm:rounded-xl border-2 border-dashed shadow-sm hover:shadow-md flex items-center justify-center backdrop-blur-sm shrink-0",
+                  "h-10 w-10 sm:h-[56px] sm:w-[56px] hover:scale-105 active:scale-95 transition-all duration-200 rounded-lg border flex items-center justify-center shrink-0",
                   resolvedTheme === 'light' 
-                    ? "border-gray-400 bg-white hover:border-blue-500 hover:bg-gray-50" 
-                    : "border-slate-500 bg-slate-800 hover:border-sky-400 hover:bg-slate-700",
+                    ? "border-gray-200 bg-gray-50 hover:border-gray-300" 
+                    : `${colors.buttonPrimary} border-zinc-800 hover:border-zinc-700`,
                   disabled && "opacity-50 cursor-not-allowed"
                 )}
                 style={{
-                  backgroundColor: resolvedTheme === 'light' ? 'white' : 'rgb(83, 93, 108)',
-                  borderColor: resolvedTheme === 'light' ? '#9ca3af' : '#64748b',
+                  backgroundColor: resolvedTheme === 'light' ? '#f9fafb' : '#18181b', // gray-50 or zinc-900
+                  borderColor: resolvedTheme === 'light' ? '#e5e7eb' : '#27272a', // gray-200 or zinc-800
                   width: isLargeScreen ? '56px' : '40px',
                   height: isLargeScreen ? '56px' : '40px',
                   minWidth: isLargeScreen ? '56px' : '40px',
@@ -170,23 +176,27 @@ export function Composer({ onSend, disabled = false, sessionId, projectId, editC
                 }}
                 onMouseEnter={(e) => {
                   if (resolvedTheme === 'dark') {
-                    e.currentTarget.style.borderColor = '#0ea5e9' // sky-400
+                    e.currentTarget.style.borderColor = '#3f3f46' // zinc-700
+                    e.currentTarget.style.backgroundColor = '#27272a' // zinc-800
                   } else {
-                    e.currentTarget.style.borderColor = '#3b82f6' // blue-500
+                    e.currentTarget.style.borderColor = '#d1d5db' // gray-300
+                    e.currentTarget.style.backgroundColor = '#f3f4f6' // gray-100
                   }
                 }}
                 onMouseLeave={(e) => {
                   if (resolvedTheme === 'dark') {
-                    e.currentTarget.style.borderColor = '#64748b' // slate-500
+                    e.currentTarget.style.borderColor = '#27272a' // zinc-800
+                    e.currentTarget.style.backgroundColor = '#18181b' // zinc-900
                   } else {
-                    e.currentTarget.style.borderColor = '#9ca3af' // gray-400
+                    e.currentTarget.style.borderColor = '#e5e7eb' // gray-200
+                    e.currentTarget.style.backgroundColor = '#f9fafb' // gray-50
                   }
                 }}
               >
                 <Mic 
                   className="h-4 w-4 sm:h-5 sm:w-5 transition-colors"
                   style={{
-                    color: resolvedTheme === 'light' ? '#374151' : '#e2e8f0',
+                    color: resolvedTheme === 'light' ? '#4b5563' : '#a1a1aa', // gray-600 or zinc-400
                     strokeWidth: 2
                   }}
                 />
@@ -208,28 +218,31 @@ export function Composer({ onSend, disabled = false, sessionId, projectId, editC
             onChange={e => setText(e.target.value)}
             onKeyDown={handleKeyDown}
             onClick={() => textareaRef.current?.focus()}
-            placeholder={isSmallScreen ? "Take me to the mo…" : "Take me to the moment your story begins…"}
+            placeholder={isSmallScreen ? "Type your message…" : "Type your message…"}
             className={cn(
-              `composer-textarea flex-1 min-w-0 resize-none border-0 ${colors.inputBackground} backdrop-blur-sm focus:${colors.inputBackground} rounded-lg sm:rounded-xl transition-all duration-200 text-xs sm:text-sm md:text-base ${colors.text} px-2 sm:px-3 py-2 sm:py-3`,
+              `composer-textarea flex-1 min-w-0 resize-none border ${colors.inputBorder} ${colors.inputBackground} rounded-lg transition-all duration-200 text-sm sm:text-base ${colors.text} px-4 py-3`,
               resolvedTheme === 'light' 
-                ? 'placeholder-gray-500 placeholder:text-xs sm:placeholder:text-sm md:placeholder:text-base' 
-                : 'placeholder-slate-300 placeholder:text-xs sm:placeholder:text-sm md:placeholder:text-base',
+                ? 'placeholder-gray-500' 
+                : 'placeholder-zinc-600',
               disabled && "opacity-50 cursor-not-allowed"
             )}
             style={{
-              caretColor: '#3b82f6',
+              caretColor: resolvedTheme === 'dark' ? '#71717a' : '#6b7280',
               cursor: 'text',
               outline: 'none',
               textAlign: 'left',
-              lineHeight: '1.4',
-              height: isLargeScreen ? '56px' : '40px', // sm:h-[56px] equivalent
-              minHeight: isLargeScreen ? '56px' : '40px',
-              maxHeight: isLargeScreen ? '56px' : '40px',
-              paddingTop: isLargeScreen ? '16px' : '12px',
-              paddingBottom: isLargeScreen ? '16px' : '12px',
+              lineHeight: '1.6',
+              height: isLargeScreen ? '56px' : '48px',
+              minHeight: isLargeScreen ? '56px' : '48px',
+              maxHeight: isLargeScreen ? '56px' : '48px',
+              paddingTop: isLargeScreen ? '16px' : '14px',
+              paddingBottom: isLargeScreen ? '16px' : '14px',
               boxSizing: 'border-box',
               overflow: 'hidden',
               resize: 'none',
+              backgroundColor: resolvedTheme === 'dark' ? '#09090b' : undefined,
+              fontFamily: 'system-ui, -apple-system, sans-serif',
+              letterSpacing: '0.01em'
             }}
             disabled={disabled}
           />
@@ -300,17 +313,13 @@ export function Composer({ onSend, disabled = false, sessionId, projectId, editC
               style={{ 
                 width: isLargeScreen ? '56px' : '40px',
                 height: isLargeScreen ? '56px' : '40px',
-                border: !text.trim() || disabled 
-                  ? resolvedTheme === 'light' 
-                    ? '2px solid #0ea5e9' 
-                    : '2px solid #64748b'
-                  : 'none',
+                border: 'none',
                 borderRadius: '30%',
-                boxShadow: !text.trim() || disabled 
+                boxShadow: (!text.trim() && attachedFiles.length === 0) || disabled 
                   ? resolvedTheme === 'light'
-                    ? '0 4px 14px 0 rgba(14, 165, 233, 0.3)'
-                    : '0 4px 14px 0 rgba(100, 116, 139, 0.3)'
-                  : '0 4px 14px 0 rgba(96, 165, 250, 0.4)'
+                    ? '0 2px 8px 0 rgba(0, 0, 0, 0.1)'
+                    : '0 2px 8px 0 rgba(0, 0, 0, 0.3)'
+                  : '0 4px 14px 0 rgba(59, 130, 246, 0.3)'
               }}
           >
             {disabled ? (

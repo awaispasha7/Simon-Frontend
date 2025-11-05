@@ -5,7 +5,9 @@ import { auth, supabase } from './supabase'
 import type { User as SupabaseUser, Session } from '@supabase/supabase-js'
 
 interface User {
-  user_id: string
+  id?: string
+  user_id?: string
+  username?: string
   email?: string
   display_name?: string
   avatar_url?: string
@@ -17,8 +19,7 @@ interface AuthContextType {
   user: User | null
   isLoading: boolean
   isAuthenticated: boolean
-  login: (email: string, password: string) => Promise<void>
-  signup: (email: string, password: string, displayName: string) => Promise<unknown>
+  login: (username: string, password: string) => Promise<void>
   logout: () => Promise<void>
   updateProfile: (data: Partial<User>) => Promise<void>
 }
@@ -54,123 +55,110 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [user])
 
-  // Check for existing user on mount and listen to auth changes
+  // Check for existing user on mount (token-based auth)
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        // Get current session
-        const { session } = await auth.getCurrentSession()
-        if (session?.user) {
-          setUser(convertSupabaseUser(session.user))
+        // Check for stored token and user
+        const storedToken = localStorage.getItem('auth_token')
+        const storedUser = localStorage.getItem('auth_user')
+        
+        if (storedToken && storedUser) {
+          try {
+            // Restore user from localStorage immediately (for faster UX)
+            const parsedUser = JSON.parse(storedUser)
+            const userData: User = {
+              id: parsedUser.user_id || parsedUser.id,
+              user_id: parsedUser.user_id || parsedUser.id,
+              username: parsedUser.username || 'User',
+              email: parsedUser.email || '',
+              display_name: parsedUser.display_name || parsedUser.username || 'User',
+              avatar_url: parsedUser.avatar_url || null
+            }
+            
+            // Set user immediately from stored data
+            setUser(userData)
+            setIsLoading(false) // Allow UI to render while validating
+            
+            // Then verify token is still valid by checking user info
+            try {
+              const { authApi } = await import('./api')
+              const userInfo = await authApi.getCurrentUser()
+              
+              // Update with fresh data from server
+              const freshUserData: User = {
+                id: userInfo.user_id || userInfo.id,
+                user_id: userInfo.user_id || userInfo.id,
+                username: userInfo.username || 'User',
+                email: userInfo.email || '',
+                display_name: userInfo.display_name || userInfo.username || 'User',
+                avatar_url: userInfo.avatar_url || null
+              }
+              
+              setUser(freshUserData)
+              // Update stored user data
+              localStorage.setItem('auth_user', JSON.stringify(freshUserData))
+            } catch (validationError) {
+              // Token invalid, but keep user for now if we have stored data
+              // Only clear if it's a 401 (unauthorized)
+              if (validationError && typeof validationError === 'object' && 'response' in validationError) {
+                const response = (validationError as { response?: { status?: number } }).response
+                if (response?.status === 401) {
+                  console.warn('Token expired, clearing auth data')
+                  localStorage.removeItem('auth_token')
+                  localStorage.removeItem('auth_user')
+                  setUser(null)
+                } else {
+                  console.warn('Token validation failed, but keeping stored user:', validationError)
+                }
+              } else {
+                console.warn('Token validation failed, but keeping stored user:', validationError)
+              }
+            }
+          } catch (parseError) {
+            // Invalid stored user data, clear it
+            console.warn('Invalid stored user data, clearing:', parseError)
+            localStorage.removeItem('auth_token')
+            localStorage.removeItem('auth_user')
+            setUser(null)
+            setIsLoading(false)
+          }
+        } else {
+          setIsLoading(false)
         }
       } catch (error) {
         console.error('Error checking auth:', error)
-      } finally {
         setIsLoading(false)
       }
     }
 
     initializeAuth()
+  }, [])
 
-    // Listen to auth state changes
-    const { data: { subscription } } = auth.onAuthStateChange(async (event, session) => {
-      const typedSession = session as Session | null
-      
-      if (event === 'SIGNED_IN' && typedSession?.user) {
-        // Ensure user exists in backend (only sync once per session)
-        if (!userSynced) {
-          try {
-            const { sessionApi } = await import('./api')
-            await sessionApi.createUser({
-              user_id: typedSession.user.id, // Pass the Supabase auth user ID
-              email: typedSession.user.email,
-              display_name: typedSession.user.user_metadata?.display_name || typedSession.user.email?.split('@')[0],
-              avatar_url: typedSession.user.user_metadata?.avatar_url
-            })
-            setUserSynced(true)
-          
-          // Check if there's an anonymous session to migrate (only once)
-          const anonymousSessionId = localStorage.getItem('anonymous_session_id')
-          if (anonymousSessionId && !migrationAttempted) {
-            setMigrationAttempted(true)
-            try {
-              console.log('🔄 Migrating anonymous session to authenticated user...')
-              await sessionApi.migrateSession(anonymousSessionId, typedSession.user.id)
-              console.log('✅ Anonymous session migrated successfully')
-              
-              // Clear the anonymous session from localStorage
-              localStorage.removeItem('anonymous_session_id')
-              localStorage.removeItem('anonymous_project_id')
-              localStorage.removeItem('anonymous_session_expires_at')
-            } catch (migrationError) {
-              console.warn('⚠️ Failed to migrate anonymous session:', migrationError)
-              // Reset flag on failure so it can be retried
-              setMigrationAttempted(false)
-            }
-          }
-        } catch (backendError) {
-          console.warn('⚠️ Failed to sync user to backend on auth state change:', backendError)
-        }
-        }
-        
-        setUser(convertSupabaseUser(typedSession.user))
-      } else if (event === 'SIGNED_OUT') {
-        setUser(null)
-      }
-      
-      setIsLoading(false)
-    })
-
-    return () => {
-      subscription.unsubscribe()
-    }
-  }, [convertSupabaseUser, migrationAttempted, userSynced])
-
-  const login = useCallback(async (email: string, password: string) => {
+  const login = useCallback(async (username: string, password: string) => {
     try {
       setIsLoading(true)
-      const { data, error } = await auth.signIn(email, password)
+      const { authApi } = await import('./api')
+      const response = await authApi.login(username, password)
       
-      if (error) {
-        throw new Error(error.message)
-      }
-      
-      if (data.user) {
-        // Ensure user exists in backend
-        try {
-          const { sessionApi } = await import('./api')
-          await sessionApi.createUser({
-            user_id: data.user.id, // Pass the Supabase auth user ID
-            email: data.user.email,
-            display_name: data.user.user_metadata?.display_name || data.user.email?.split('@')[0],
-            avatar_url: data.user.user_metadata?.avatar_url
-          })
-          
-          // Check if there's an anonymous session to migrate (only once)
-          const anonymousSessionId = localStorage.getItem('anonymous_session_id')
-          if (anonymousSessionId && !migrationAttempted) {
-            setMigrationAttempted(true)
-            try {
-              console.log('🔄 Migrating anonymous session to authenticated user...')
-              await sessionApi.migrateSession(anonymousSessionId, data.user.id)
-              console.log('✅ Anonymous session migrated successfully')
-              
-              // Clear the anonymous session from localStorage
-              localStorage.removeItem('anonymous_session_id')
-              localStorage.removeItem('anonymous_project_id')
-              localStorage.removeItem('anonymous_session_expires_at')
-            } catch (migrationError) {
-              console.warn('⚠️ Failed to migrate anonymous session:', migrationError)
-              setMigrationAttempted(false)
-            }
-          }
-        } catch (backendError) {
-          console.warn('⚠️ Failed to sync user to backend:', backendError)
-          // Don't throw here - the user can still log in
-          // We'll retry user sync when they try to use session features
+      // Store token and user info
+      if (response.access_token) {
+        localStorage.setItem('auth_token', response.access_token)
+        localStorage.setItem('auth_user', JSON.stringify(response.user))
+        
+        // Convert to User type for compatibility
+        const userData: User = {
+          id: response.user.user_id || 'single_client',
+          user_id: response.user.user_id || 'single_client',
+          email: response.user.email || '',
+          display_name: response.user.display_name || response.user.username || 'User',
+          avatar_url: response.user.avatar_url || null,
+          username: response.user.username || 'User'
         }
         
-        setUser(convertSupabaseUser(data.user))
+        setUser(userData)
+      } else {
+        throw new Error('Invalid response from server')
       }
     } catch (error) {
       console.error('Login error:', error)
@@ -178,76 +166,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false)
     }
-  }, [convertSupabaseUser, migrationAttempted])
+  }, [])
 
-  const signup = useCallback(async (email: string, password: string, displayName: string) => {
-    try {
-      setIsLoading(true)
-      const response = await auth.signUp(email, password, displayName)
-      
-      if (response.error) {
-        throw new Error(response.error.message)
-      }
-      
-      // If user was created successfully, also create them in the backend
-      if (response.data.user) {
-        try {
-          const { sessionApi } = await import('./api')
-          await sessionApi.createUser({
-            user_id: response.data.user.id, // Pass the Supabase auth user ID
-            email: response.data.user.email,
-            display_name: displayName,
-            avatar_url: response.data.user.user_metadata?.avatar_url
-          })
-          console.log('✅ User created in backend successfully')
-          
-          // Check if there's an anonymous session to migrate (only once)
-          const anonymousSessionId = localStorage.getItem('anonymous_session_id')
-          if (anonymousSessionId && !migrationAttempted) {
-            setMigrationAttempted(true)
-            try {
-              console.log('🔄 Migrating anonymous session to new authenticated user...')
-              await sessionApi.migrateSession(anonymousSessionId, response.data.user.id)
-              console.log('✅ Anonymous session migrated successfully')
-              
-              // Clear the anonymous session from localStorage
-              localStorage.removeItem('anonymous_session_id')
-              localStorage.removeItem('anonymous_project_id')
-              localStorage.removeItem('anonymous_session_expires_at')
-            } catch (migrationError) {
-              console.warn('⚠️ Failed to migrate anonymous session:', migrationError)
-              setMigrationAttempted(false)
-            }
-          }
-        } catch (backendError) {
-          console.warn('⚠️ Failed to create user in backend:', backendError)
-          // Don't throw here - the user was created in Supabase auth, which is the main thing
-          // The user can still use the app, and we'll try to sync them later
-        }
-      }
-      
-      // Don't set user immediately on signup - they need to confirm email first
-      // User will be set when they click the email confirmation link
-      
-      return response
-    } catch (error) {
-      console.error('Signup error:', error)
-      throw error
-    } finally {
-      setIsLoading(false)
-    }
-  }, [migrationAttempted])
+  // Signup removed - single client system
 
   const logout = useCallback(async () => {
     try {
       setIsLoading(true)
-      const { error } = await auth.signOut()
-      
-      if (error) {
-        throw new Error(error.message)
+      // Try to call logout API (optional, might fail if token is invalid)
+      try {
+        const { authApi } = await import('./api')
+        await authApi.logout()
+      } catch (apiError) {
+        // Ignore API errors - we'll clear local storage anyway
+        console.warn('Logout API call failed (continuing with local logout):', apiError)
       }
       
+      // Clear token and user data
+      localStorage.removeItem('auth_token')
+      localStorage.removeItem('auth_user')
       setUser(null)
+      
+      // Clear any stored session data
+      localStorage.removeItem('stories_we_tell_session')
+      localStorage.removeItem('anonymous_session_id')
+      localStorage.removeItem('anonymous_project_id')
+      localStorage.removeItem('anonymous_session_expires_at')
     } catch (error) {
       console.error('Logout error:', error)
       throw error
@@ -286,7 +230,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isLoading,
     isAuthenticated: !!user,
     login,
-    signup,
     logout,
     updateProfile
   }

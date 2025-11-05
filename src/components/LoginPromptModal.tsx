@@ -1,11 +1,10 @@
 'use client'
 
-import { X, UserPlus, LogIn, Sparkles } from 'lucide-react'
+import { X, LogIn, Sparkles } from 'lucide-react'
 
 interface LoginPromptModalProps {
   isOpen: boolean
   onClose: () => void
-  onSignup: () => void
   onLogin: () => void
   trigger?: 'new-story' | 'session-start' | 'story-complete'
 }
@@ -13,7 +12,6 @@ interface LoginPromptModalProps {
 export function LoginPromptModal({ 
   isOpen, 
   onClose, 
-  onSignup, 
   onLogin, 
   trigger = 'session-start' 
 }: LoginPromptModalProps) {
@@ -33,11 +31,11 @@ export function LoginPromptModal({
   const getDescription = () => {
     switch (trigger) {
       case 'new-story':
-        return 'Sign up to create multiple stories and access advanced features like story management, character development, and script generation.'
+        return 'Login to create multiple stories and access advanced features like story management, character development, and script generation.'
       case 'story-complete':
-        return 'Great job completing your story! Sign up to create unlimited stories and never lose your creative work.'
+        return 'Great job completing your story! Login to create unlimited stories and never lose your creative work.'
       default:
-        return 'Sign up to create unlimited stories, save your progress, and access advanced story development features.'
+        return 'Login to create unlimited stories, save your progress, and access advanced story development features.'
     }
   }
 
@@ -283,42 +281,6 @@ export function LoginPromptModal({
             padding: '0'
           }}
         >
-          <button
-            onClick={onSignup}
-            className="w-full bg-linear-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-200 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl"
-            style={{
-              width: '100%',
-              background: 'linear-gradient(90deg, #8b5cf6 0%, #ec4899 100%)',
-              color: 'white',
-              fontWeight: '600',
-              padding: 'clamp(0.75rem, 3vw, 1rem) clamp(1rem, 4vw, 1.5rem)',
-              borderRadius: 'clamp(0.75rem, 2vw, 1rem)',
-              border: 'none',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 'clamp(0.375rem, 1.5vw, 0.5rem)',
-              boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-              transition: 'all 0.2s ease',
-              margin: '0',
-              fontSize: 'clamp(0.875rem, 2.5vw, 1rem)'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'linear-gradient(90deg, #7c3aed 0%, #db2777 100%)'
-              e.currentTarget.style.boxShadow = '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
-              e.currentTarget.style.transform = 'scale(1.02)'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'linear-gradient(90deg, #8b5cf6 0%, #ec4899 100%)'
-              e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
-              e.currentTarget.style.transform = 'scale(1)'
-            }}
-          >
-            <UserPlus className="w-5 h-5" />
-            <span>Sign Up</span>
-          </button>
-          
           <button
             onClick={onLogin}
             className="w-full bg-white dark:bg-slate-700 border-2 border-purple-500 text-purple-500 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-slate-600 font-semibold py-3 px-4 rounded-xl transition-all duration-200 flex items-center justify-center space-x-2"

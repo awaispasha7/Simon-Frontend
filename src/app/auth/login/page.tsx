@@ -4,26 +4,39 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useMutation } from '@tanstack/react-query'
 import { useAuth } from '@/lib/auth-context'
+import { useTheme, getThemeColors } from '@/lib/theme-context'
 import '../auth-styles.css'
 
 
 export default function LoginPage() {
-  const [formData, setFormData] = useState({ email: '', password: '', remember: false })
+  // Check if remember me was previously set
+  const remembered = typeof window !== 'undefined' ? localStorage.getItem('remember_me') === 'true' : false
+  const [formData, setFormData] = useState({ 
+    username: '', 
+    password: '', 
+    remember: remembered 
+  })
   const [showPassword, setShowPassword] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [showSuccess, setShowSuccess] = useState(false)
   const [isShaking, setIsShaking] = useState(false)
   const router = useRouter()
   const { login } = useAuth()
+  const { resolvedTheme } = useTheme()
+  const colors = getThemeColors(resolvedTheme)
 
   const loginMutation = useMutation({
-    mutationFn: async (data: { email: string; password: string }) =>
-      login(data.email, data.password),
+    mutationFn: async (data: { username: string; password: string }) =>
+      login(data.username, data.password),
     onSuccess: () => {
-      setShowSuccess(true)
-      setTimeout(() => {
-        router.push('/chat')
-      }, 3000)
+      // Store remember me preference
+      if (formData.remember) {
+        localStorage.setItem('remember_me', 'true')
+      } else {
+        localStorage.removeItem('remember_me')
+      }
+      // Redirect immediately after successful login
+      router.push('/chat')
     },
     onError: (err: Error) => {
       setErrors({ general: err.message || 'Login failed. Please try again.' })
@@ -32,23 +45,21 @@ export default function LoginPage() {
     }
   })
 
-  const validateEmail = (email: string) => {
-    if (!email) return { isValid: false, message: 'Email is required' }
-    if (!/\S+@\S+\.\S+/.test(email)) return { isValid: false, message: 'Enter a valid email' }
+  const validateUsername = (username: string) => {
+    if (!username) return { isValid: false, message: 'Username is required' }
     return { isValid: true, message: '' }
   }
 
   const validatePassword = (password: string) => {
     if (!password) return { isValid: false, message: 'Password is required' }
-    if (password.length < 6) return { isValid: false, message: 'Password must be at least 6 characters' }
     return { isValid: true, message: '' }
   }
 
   const validateField = (fieldName: string, value: string) => {
     let result
     switch (fieldName) {
-      case 'email':
-        result = validateEmail(value)
+      case 'username':
+        result = validateUsername(value)
         break
       case 'password':
         result = validatePassword(value)
@@ -69,11 +80,11 @@ export default function LoginPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     
-    const emailValid = validateField('email', formData.email)
+    const usernameValid = validateField('username', formData.username)
     const passwordValid = validateField('password', formData.password)
     
-    if (emailValid && passwordValid) {
-      loginMutation.mutate({ email: formData.email, password: formData.password })
+    if (usernameValid && passwordValid) {
+      loginMutation.mutate({ username: formData.username, password: formData.password })
     } else {
       setIsShaking(true)
       setTimeout(() => setIsShaking(false), 500)
@@ -87,67 +98,43 @@ export default function LoginPage() {
     }
   }
 
-  const handleSocialLogin = (provider: string) => {
-    console.log(`Connecting to ${provider}...`)
-    // Add your social login logic here
-    if (provider === 'Facebook') {
-      // TODO: Implement Facebook OAuth
-      console.log('Facebook login not yet implemented')
-    } else if (provider === 'X') {
-      // TODO: Implement X (Twitter) OAuth
-      console.log('X login not yet implemented')
-    } else if (provider === 'Google') {
-      // TODO: Implement Google OAuth
-      console.log('Google login not yet implemented')
-    }
-  }
 
-  const handleForgotPassword = (e: React.MouseEvent) => {
-    e.preventDefault()
-    // Navigate to forgot password page
-    router.push('/auth/forgot-password')
-  }
-
-  const handleSignupLink = (e: React.MouseEvent) => {
-    e.preventDefault()
-    router.push('/auth/signup')
-  }
 
   return (
-    <div className="auth-container">
+    <div className={`auth-container ${resolvedTheme === 'dark' ? 'dark' : 'light'}`}>
       <div className="auth-card-container">
         <div className={`auth-card ${isShaking ? 'animate-shake' : ''}`}>
           {!showSuccess ? (
             <>
               {/* Header */}
               <div className="auth-header">
-                <h2 className="auth-title">Welcome Back</h2>
-                <p className="auth-subtitle">Sign in to your account</p>
+                <h2 className="auth-title">Welcome</h2>
+                <p className="auth-subtitle">Sign in to your personal AI assistant</p>
               </div>
 
               {/* Form */}
               <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Email Field */}
+                {/* Username Field */}
                 <div className="auth-form-group">
                   <div className="auth-input-wrapper">
                     <input
-                      type="email"
-                      id="email"
-                      value={formData.email}
-                      onChange={(e) => handleInputChange('email', e.target.value)}
-                      onBlur={() => validateField('email', formData.email)}
-                      className="auth-input"
+                      type="text"
+                      id="username"
+                      value={formData.username}
+                      onChange={(e) => handleInputChange('username', e.target.value)}
+                      onBlur={() => validateField('username', formData.username)}
+                      className={`auth-input ${formData.username ? 'has-value' : ''}`}
                       placeholder=" "
-                      autoComplete="email"
+                      autoComplete="username"
                     />
-                    <label htmlFor="email" className="auth-label">
-                      Email Address
+                    <label htmlFor="username" className={`auth-label ${formData.username ? 'has-value' : ''}`}>
+                      Username
                     </label>
                     <div className="auth-focus-border"></div>
                   </div>
-                  {errors.email && (
+                  {errors.username && (
                     <span className="auth-error-message show">
-                      {errors.email}
+                      {errors.username}
                     </span>
                   )}
                 </div>
@@ -161,11 +148,11 @@ export default function LoginPage() {
                       value={formData.password}
                       onChange={(e) => handleInputChange('password', e.target.value)}
                       onBlur={() => validateField('password', formData.password)}
-                      className="auth-input"
+                      className={`auth-input ${formData.password ? 'has-value' : ''}`}
                       placeholder=" "
                       autoComplete="current-password"
                     />
-                    <label htmlFor="password" className="auth-label">
+                    <label htmlFor="password" className={`auth-label ${formData.password ? 'has-value' : ''}`}>
                       Password
                     </label>
                     <button
@@ -200,13 +187,6 @@ export default function LoginPage() {
                       Remember me
                     </span>
                   </label>
-                  <button
-                    type="button"
-                    onClick={handleForgotPassword}
-                    className="auth-forgot-password"
-                  >
-                    Forgot password?
-                  </button>
                 </div>
 
                 {/* General Error */}
@@ -227,57 +207,6 @@ export default function LoginPage() {
                 </button>
               </form>
 
-              {/* Divider */}
-              <div className="auth-divider">
-                <span>or continue with</span>
-              </div>
-
-              {/* Social Login */}
-              <div className="auth-social-login">
-                <button
-                  type="button"
-                  onClick={() => handleSocialLogin('Facebook')}
-                  className="auth-social-btn auth-social-btn-disabled"
-                  disabled
-                  title="Coming soon"
-                >
-                  <span className="auth-social-icon auth-facebook-icon"></span>
-                  Facebook
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleSocialLogin('X')}
-                  className="auth-social-btn auth-social-btn-disabled"
-                  disabled
-                  title="Coming soon"
-                >
-                  <span className="auth-social-icon auth-x-icon"></span>
-                  X
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleSocialLogin('Google')}
-                  className="auth-social-btn auth-social-btn-disabled"
-                  disabled
-                  title="Coming soon"
-                >
-                  <span className="auth-social-icon auth-google-icon"></span>
-                  Google
-                </button>
-              </div>
-
-              {/* Signup Link */}
-              <div className="auth-signup-link">
-                <p>
-                  Don't have an account?{' '}
-                  <button
-                    onClick={handleSignupLink}
-                    className="auth-signup-link a px-4 py-2 rounded-lg hover:scale-105 transition-all duration-200"
-                  >
-                    Sign up
-                  </button>
-                </p>
-              </div>
             </>
           ) : (
             /* Success Message */

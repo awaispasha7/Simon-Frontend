@@ -22,7 +22,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <meta name="grammarly-disable-extension" content="true" />
       </head>
       <body className={`${inter.className} antialiased`}>
-        <ThemeProvider>
+        <ThemeProvider defaultTheme="dark">
           <QueryProvider>
             <AuthProvider>
               <ProfileProvider>

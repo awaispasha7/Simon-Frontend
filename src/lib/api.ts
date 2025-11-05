@@ -5,14 +5,29 @@ const getUserHeaders = () => {
   if (typeof window === 'undefined') return {}
   
   try {
-    const user = localStorage.getItem('user')
+    // For single-client system, get user from auth_user (set during login)
+    const authUser = localStorage.getItem('auth_user')
     const session = localStorage.getItem('stories_we_tell_session')
     
     const headers: Record<string, string> = {}
     
-    if (user) {
-      const userData = JSON.parse(user)
-      headers['X-User-ID'] = userData.user_id
+    // Use auth_user if available (from login), otherwise fallback to user
+    if (authUser) {
+      const userData = JSON.parse(authUser)
+      // Only send X-User-ID if it's a valid UUID format
+      // Backend will use SINGLE_USER_ID anyway, but this prevents errors
+      if (userData.user_id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userData.user_id)) {
+        headers['X-User-ID'] = userData.user_id
+      }
+    } else {
+      // Fallback to old user storage (for backwards compatibility)
+      const user = localStorage.getItem('user')
+      if (user) {
+        const userData = JSON.parse(user)
+        if (userData.user_id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userData.user_id)) {
+          headers['X-User-ID'] = userData.user_id
+        }
+      }
     }
     
     if (session) {
@@ -48,7 +63,7 @@ export const api = ky.create({
         
         // Add Authorization header if token is available
         if (typeof window !== 'undefined') {
-          const token = localStorage.getItem('access_token')
+          const token = localStorage.getItem('auth_token')
           if (token) {
             request.headers.set('Authorization', `Bearer ${token}`)
           }
@@ -69,22 +84,20 @@ export const sessionApi = {
     })
   },
   
-  // Get user sessions
+  // Get user sessions - simplified for single-user personal assistant
   getSessions: async (limit = 10) => {
     try {
+      // For single-user personal assistant, backend uses fixed user ID automatically
+      // No need to send X-User-ID header
       const result = await api.get('api/v1/sessions', { 
         searchParams: { limit }
       }).json()
       return result
-        } catch (error: unknown) {
-          console.error('❌ getSessions error:', error)
-          if (error && typeof error === 'object' && 'response' in error && 
-              error.response && typeof error.response === 'object' && 'status' in error.response &&
-              error.response.status === 404) {
-            return []
-          }
-          throw error
-        }
+    } catch (error: unknown) {
+      console.error('❌ getSessions error:', error)
+      // Return empty result on error to prevent UI crashes
+      return { success: true, sessions: [] }
+    }
   },
   
   // Get session messages
@@ -149,10 +162,17 @@ export const sessionApi = {
     }
   },
   
-  // Get current user
-  getCurrentUser: () => {
-    const headers = getUserHeaders()
-    return api.get('api/v1/users/me', { headers }).json()
+  // Get current user (uses JWT token from Authorization header)
+  getCurrentUser: async () => {
+    // Get auth token and set Authorization header
+    const authToken = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
+    const headers: Record<string, string> = {}
+    
+    if (authToken) {
+      headers['Authorization'] = `Bearer ${authToken}`
+    }
+    
+    return api.get('api/v1/auth/me', { headers }).json()
   },
   
   // Simplified session management
@@ -178,24 +198,12 @@ export const sessionApi = {
     api.post('api/v1/cleanup-expired').json()
 }
 
-// Authentication API
+// Authentication API - Single client system
 export const authApi = {
-  // Login with email and password
-  login: (email: string, password: string) =>
+  // Login with username and password
+  login: (username: string, password: string) =>
     api.post('api/v1/auth/login', { 
-      json: { email, password } 
-    }).json(),
-  
-  // Signup with email, display name, and password
-  signup: (email: string, displayName: string, password: string) =>
-    api.post('api/v1/auth/signup', { 
-      json: { email, display_name: displayName, password } 
-    }).json(),
-  
-  // Google OAuth authentication
-  googleAuth: (token: string, email: string, name: string, picture?: string) =>
-    api.post('api/v1/auth/google', { 
-      json: { token, email, name, picture } 
+      json: { username, password } 
     }).json(),
   
   // Get current user info
@@ -209,4 +217,18 @@ export const authApi = {
   // Logout
   logout: () =>
     api.post('api/v1/auth/logout').json()
+}
+
+// Coach tools API (MVP, localhost backend)
+export const coachApi = {
+  scriptwriter: (topic: string, audience?: string, brandVoice?: string) =>
+    api.post('api/v1/coach/scriptwriter', { json: { topic, audience, brand_voice: brandVoice } }).json(),
+  competitorRewrite: (transcript: string, brandVoice?: string) =>
+    api.post('api/v1/coach/competitorrewrite', { json: { transcript, brand_voice: brandVoice } }).json(),
+  avatarRefine: (currentAvatar?: string) =>
+    api.post('api/v1/coach/avatar_refine', { json: { current_avatar: currentAvatar } }).json(),
+  northstarEditor: (doc: string) =>
+    api.post('api/v1/coach/northstar_editor', { json: { doc } }).json(),
+  contentPlanner: (pillars?: string[], topic?: string) =>
+    api.post('api/v1/coach/contentplanner', { json: { pillars, topic } }).json(),
 }

@@ -3,12 +3,13 @@
 import { useState, useRef, useEffect } from 'react'
 import { MessageBubble, BubbleProps } from './MessageBubble'
 import { Composer } from './Composer'
-import { useDossierRefresh } from '@/lib/dossier-context'
-import { useAuth } from '@/lib/auth-context'
+// Dossier and Auth removed for coaching MVP
 import { useSession } from '@/hooks/useSession'
 import { sessionSyncManager } from '@/lib/session-sync'
 import { useRouter } from 'next/navigation'
 import { useToast } from '@/components/Toast'
+import { useTheme, getThemeColors } from '@/lib/theme-context'
+import { cn } from '@/lib/utils'
 // import { useChatStore } from '@/lib/store' // Unused for now
 // import { Loader2 } from 'lucide-react' // Unused import
 
@@ -27,7 +28,8 @@ interface ChatPanelProps {
 }
 
 export function ChatPanel({ _sessionId, _projectId, onSessionUpdate }: ChatPanelProps) {
-  const { user, isAuthenticated } = useAuth()
+  const user: any = null
+  const isAuthenticated = false
   const { 
     sessionId: hookSessionId, 
     projectId: hookProjectId,
@@ -36,12 +38,10 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate }: ChatPanel
   } = useSession(_sessionId, _projectId)
   const router = useRouter()
   const toast = useToast()
+  const { resolvedTheme } = useTheme()
+  const colors = getThemeColors(resolvedTheme)
   
   // Action button handlers for interactive chat buttons
-  const handleSignup = () => {
-    router.push('/auth/signup')
-  }
-
   const handleLogin = () => {
     router.push('/auth/login')
   }
@@ -72,7 +72,7 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate }: ChatPanel
       // For anonymous users, show warning toast with options
       toast.newChatWarning(
         'Create New Chat?',
-        'If you create a new chat, your current chat data will be lost forever! To save and load chats, login/signup.',
+        'If you create a new chat, your current chat data will be lost forever! Please login to save and load chats.',
         () => {
           // User confirmed - clear current session
           setCurrentSessionId('')
@@ -88,7 +88,7 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate }: ChatPanel
         },
         undefined, // No cancel action needed
         handleLogin, // Login button
-        handleSignup, // Signup button
+        undefined, // No signup button
         'Continue',
         'Cancel'
       )
@@ -149,9 +149,12 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate }: ChatPanel
   const [messages, setMessages] = useState<BubbleProps[]>([
     {
       role: 'assistant',
-      content: "Hi! I'm here to help bring your story to life. What story idea has been on your mind?"
+      content: "Hi! I'm your personal content strategist and assistant. Tell me your goal, topic, or paste a script—I'll help you plan, write, or refine with emotional clarity."
     }
   ])
+  
+  // Track if we're currently streaming to prevent message reload during streaming
+  const isStreamingRef = useRef(false)
   const [isLoading, setIsLoading] = useState(false)
   const [typingMessage, setTypingMessage] = useState('')
   const [showSignInPrompt, setShowSignInPrompt] = useState(false)
@@ -268,7 +271,7 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate }: ChatPanel
   }, [_sessionId, onSessionUpdate, isAuthenticated]) // Include missing dependencies
   
   const messagesEndRef = useRef<HTMLDivElement>(null)
-  const { triggerRefresh } = useDossierRefresh()
+  // Dossier refresh removed
   // const _send = useChatStore(s => s.send) // Unused for now
 
   const scrollToBottom = () => {
@@ -313,6 +316,17 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate }: ChatPanel
         return
       }
       
+      // CRITICAL: Don't reload messages if we're currently streaming a response
+      // This prevents overwriting messages that are being streamed in
+      if (isStreamingRef.current) {
+        console.log('🔄 [CHAT] Skipping message reload - currently streaming response')
+        // Still update the ref to track the session change
+        prevSessionIdRef.current = currentSessionIdValue
+        setCurrentSessionId(sessionIdToUse || undefined)
+        setCurrentProjectId(projectIdToUse || undefined)
+        return
+      }
+      
       // Session ID has changed, update the ref
       prevSessionIdRef.current = currentSessionIdValue
       
@@ -346,6 +360,12 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate }: ChatPanel
       // If no session ID, don't load messages
       if (!sessionIdToUse) {
         console.log('🔄 [CHAT] No session ID available, skipping message load')
+        return
+      }
+
+      // Only load messages if authenticated (for authenticated users)
+      if (!isAuthenticated) {
+        console.log('🔄 [CHAT] Not authenticated yet, skipping message load')
         return
       }
 
@@ -407,7 +427,7 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate }: ChatPanel
             setMessages([
               {
                 role: 'assistant',
-                content: "Hi! I'm here to help bring your story to life. What story idea has been on your mind?"
+                content: "Hi! I'm your personal content strategist and assistant. Tell me your goal, topic, or paste a script—I'll help you plan, write, or refine with emotional clarity."
               }
             ])
           }
@@ -417,7 +437,7 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate }: ChatPanel
           setMessages([
             {
               role: 'assistant',
-              content: "Hi! I'm here to help bring your story to life. What story idea has been on your mind?"
+              content: "Hi! I'm your personal content strategist and assistant. Tell me your goal, topic, or paste a script—I'll help you plan, write, or refine with emotional clarity."
             }
           ])
         }
@@ -527,7 +547,8 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate }: ChatPanel
   }, [messages])
 
   const handleSendMessage = async (text: string, attachedFiles?: AttachedFile[]) => {
-    if (!text.trim() || isLoading) {
+    // Allow sending if there's text OR attached files
+    if ((!text.trim() && (!attachedFiles || attachedFiles.length === 0)) || isLoading) {
       return
     }
     
@@ -545,9 +566,10 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate }: ChatPanel
     }
 
     // Add user message with attached files
+    // Allow empty content if files are attached
     const userMessage: BubbleProps = { 
       role: 'user', 
-      content: text,
+      content: text || (attachedFiles && attachedFiles.length > 0 ? '📎 Attached file(s)' : ''),
       attachedFiles: attachedFiles
     }
     
@@ -561,6 +583,7 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate }: ChatPanel
     }
     
     setIsLoading(true)
+    isStreamingRef.current = true // Mark that we're starting to stream
     
     // Set dynamic typing message
     const dynamicMessage = getDynamicTypingMessage(text)
@@ -608,17 +631,11 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate }: ChatPanel
       
       console.log('💬 [CHAT] Using sessionId:', sessionId, 'projectId:', projectId)
       
-      // CRITICAL: Ensure we have a valid session before proceeding
+      // For single-user personal assistant: allow backend to create session automatically
+      // If no session ID, backend will create one on first message
       if (!sessionId) {
-        console.error('💬 [CHAT] ERROR: No session ID available! This will create a new session.')
-        console.error('💬 [CHAT] Available session sources:', {
-          hookSessionId,
-          sessionIdRef: sessionIdRef.current,
-          currentSessionId,
-          localStorageSession: typeof window !== 'undefined' ? localStorage.getItem('anonymous_session_id') : null
-        })
-        // Don't proceed without a session - this prevents creating new sessions
-        throw new Error('No session ID available - cannot send message')
+        console.log('💬 [CHAT] No session ID available - backend will create one automatically')
+        // Don't throw error - let backend handle session creation
       }
       
       // Get headers for the request
@@ -626,24 +643,23 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate }: ChatPanel
         'Content-Type': 'application/json'
       }
       
-      // Add session headers
+      // Add session headers (optional - backend will create session if missing)
       if (sessionId) {
         headers['X-Session-ID'] = sessionId
       }
       if (projectId) {
         headers['X-Project-ID'] = projectId
       }
-      if (user?.user_id) {
-        headers['X-User-ID'] = user.user_id
-      }
+      // For single-user personal assistant, backend uses fixed user_id automatically
+      // No need to send X-User-ID header
       
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers,
         body: JSON.stringify({ 
           text,
-          session_id: sessionId,
-          project_id: projectId,
+          session_id: sessionId || undefined, // Allow undefined - backend will create
+          project_id: projectId || undefined,  // Allow undefined - backend will use default
           attached_files: attachedFiles || [],
           edit_from_message_id: (isEditing && editMessageId) ? editMessageId : undefined
         }),
@@ -703,11 +719,14 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate }: ChatPanel
               } else if (data.type === 'metadata') {
                 // Handle metadata chunk - store session_id and project_id for next message
                 if (data.metadata?.session_id) {
-                  // Update both state and ref immediately
-                  setCurrentSessionId(data.metadata.session_id)
+                  // CRITICAL: Update refs immediately but don't trigger message reload during streaming
                   sessionIdRef.current = data.metadata.session_id
+                  prevSessionIdRef.current = data.metadata.session_id
                   
-                  // Persist session to localStorage and ensure it completes before dispatching event
+                  // Update state but don't trigger reload (isStreamingRef prevents it in useEffect)
+                  setCurrentSessionId(data.metadata.session_id)
+                  
+                  // Persist session to localStorage
                   try {
                     const sessionData = {
                       sessionId: data.metadata.session_id,
@@ -716,36 +735,44 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate }: ChatPanel
                     }
                     
                     localStorage.setItem('stories_we_tell_session', JSON.stringify(sessionData))
-                    console.log('💾 Session persisted to localStorage:', data.metadata.session_id)
+                    console.log('💾 Session persisted to localStorage (during streaming):', data.metadata.session_id)
                     
-                    // Verify the localStorage write was successful
-                    const stored = localStorage.getItem('stories_we_tell_session')
-                    if (stored) {
-                      const parsed = JSON.parse(stored)
-                      if (parsed.sessionId === data.metadata.session_id) {
-                        console.log('✅ localStorage verification successful')
+                    // Defer session update event until streaming completes to prevent message reload
+                    // This prevents the useEffect from overwriting messages during streaming
+                    setTimeout(() => {
+                      // Only dispatch if streaming has completed
+                      if (!isStreamingRef.current) {
+                        window.dispatchEvent(new CustomEvent('sessionUpdated', { 
+                          detail: { 
+                            sessionId: data.metadata.session_id,
+                            projectId: data.metadata?.project_id 
+                          } 
+                        }))
+                        console.log('📡 Session update event dispatched (after streaming):', data.metadata.session_id)
                         
-                        // Only dispatch event after localStorage is confirmed updated
-                        setTimeout(() => {
-                          window.dispatchEvent(new CustomEvent('sessionUpdated', { 
-                            detail: { 
-                              sessionId: data.metadata.session_id,
-                              projectId: data.metadata?.project_id 
-                            } 
-                          }))
-                          console.log('📡 Session update event dispatched:', data.metadata.session_id)
-                          
-                          // Also notify parent component if callback is provided
-                          if (onSessionUpdate) {
-                            onSessionUpdate(data.metadata.session_id, data.metadata?.project_id)
-                          }
-                        }, 50) // Small delay to ensure localStorage is fully written
+                        if (onSessionUpdate) {
+                          onSessionUpdate(data.metadata.session_id, data.metadata?.project_id)
+                        }
                       } else {
-                        console.error('❌ localStorage verification failed - session ID mismatch')
+                        // Still streaming - defer until complete
+                        const checkInterval = setInterval(() => {
+                          if (!isStreamingRef.current) {
+                            clearInterval(checkInterval)
+                            window.dispatchEvent(new CustomEvent('sessionUpdated', { 
+                              detail: { 
+                                sessionId: data.metadata.session_id,
+                                projectId: data.metadata?.project_id 
+                              } 
+                            }))
+                            if (onSessionUpdate) {
+                              onSessionUpdate(data.metadata.session_id, data.metadata?.project_id)
+                            }
+                          }
+                        }, 100)
+                        // Clear interval after 5 seconds max
+                        setTimeout(() => clearInterval(checkInterval), 5000)
                       }
-                    } else {
-                      console.error('❌ localStorage verification failed - no stored data')
-                    }
+                    }, 100) // Small delay
                   } catch (error) {
                     console.error('Failed to persist session:', error)
                   }
@@ -775,6 +802,7 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate }: ChatPanel
       
       // Ensure loading state is cleared
       setIsLoading(false)
+      isStreamingRef.current = false // Mark that streaming is complete
     } catch (error) {
       console.error('Error sending message:', error)
       
@@ -798,44 +826,43 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate }: ChatPanel
       setIsLoading(false)
       setIsProcessingMessage(false)
       setTypingMessage('')
+      isStreamingRef.current = false // Ensure streaming flag is cleared
       
       // Clear edit state after sending message
       if (isEditing) {
         handleEditComplete()
       }
       
-      // Trigger dossier refresh after AI response completes
-      // Add a small delay to ensure backend dossier update is finished
-      setTimeout(() => {
-        triggerRefresh()
-      }, 2000) // 2 second delay to ensure backend processing is complete
+      // No dossier refresh in MVP
     }
   }
 
 
   return (
-    <div className="flex flex-col h-full bg-linear-to-b from-white via-green-50/60 to-blue-50/40 relative overflow-hidden">
-      {/* Animated Background Elements */}
-      <div className="absolute inset-0 opacity-70 pointer-events-none">
-        <div className="absolute -top-10 -left-10 w-56 h-56 bg-linear-to-br from-green-400/80 to-green-500/60 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-0 -right-10 w-48 h-48 bg-linear-to-br from-blue-400/70 to-blue-500/60 rounded-full blur-2xl animate-pulse delay-1000"></div>
-        <div className="absolute top-1/3 left-1/3 w-24 h-24 bg-linear-to-br from-red-400/70 to-red-500/60 rounded-full blur-2xl animate-pulse delay-500"></div>
-      </div>
+    <div className={cn(
+      "flex flex-col h-full relative overflow-hidden",
+      resolvedTheme === 'light' ? colors.background : "bg-black"
+    )}>
 
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto overflow-x-hidden relative z-10 custom-scrollbar">
         <div className="w-full px-6 py-4">
           {messages.length === 0 && !isLoading && (
-            <div className="flex flex-col items-center justify-center h-full text-center py-12">
-              <div className="w-16 h-16 bg-linear-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center mb-6 shadow-lg">
-                <span className="text-2xl">🎬</span>
+            <div className="flex flex-col items-center justify-center h-full text-center py-12 px-6">
+              <div className={cn(
+                "w-20 h-20 rounded-xl flex items-center justify-center mb-8 border",
+                resolvedTheme === 'light'
+                  ? "bg-gray-100 border-gray-300"
+                  : "bg-zinc-950 border border-zinc-800"
+              )}>
+                <span className="text-3xl">✨</span>
               </div>
-              <h2 className="text-2xl font-bold text-gray-800 mb-3">Welcome to Stories We Tell</h2>
-              <p className="text-gray-600 max-w-md leading-relaxed">
-                Let's bring your story to life, one step at a time.
+              <h2 className={`text-2xl font-semibold ${colors.text} mb-4 tracking-tight`}>Welcome</h2>
+              <p className={`${colors.textSecondary} max-w-md leading-relaxed text-base`}>
+                Hi! I'm your personal content strategist and assistant. Tell me your goal, topic, or paste a script—I'll help you plan, write, or refine with emotional clarity.
               </p>
-              <div className="mt-6 text-sm text-gray-500">
-                Share your story idea to get started
+              <div className={`mt-8 text-sm ${colors.textTertiary} font-light`}>
+                Start typing to begin
               </div>
             </div>
           )}
@@ -882,7 +909,6 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate }: ChatPanel
               role={message.role}
               content={message.content}
               showActionButtons={shouldShowActionButtons(message.content, message.role)}
-              onSignup={handleSignup}
               onLogin={handleLogin}
               onNewStory={handleNewStory}
               attachedFiles={message.attachedFiles}
@@ -917,8 +943,8 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate }: ChatPanel
         </div>
       </div>
 
-              {/* Enhanced Composer - Fixed at bottom */}
-              <div className="border-t border-gray-200/50 bg-white/90 backdrop-blur-sm relative z-10 mt-auto">
+              {/* Composer - Fixed at bottom, theme-aware */}
+              <div className={`border-t ${colors.border} ${colors.background} relative z-10 mt-auto`}>
                 <div className="w-full overflow-hidden">
                   <Composer 
                     onSend={handleSendMessage} 
