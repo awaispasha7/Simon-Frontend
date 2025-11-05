@@ -14,8 +14,8 @@ export async function POST(req: NextRequest) {
 
     console.log(`📤 Received ${files.length} file(s) for upload`)
 
-    // Get the backend URL from environment variables (use local for development)
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'
+    // Get the backend URL from environment variables
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://simon-backend-blond.vercel.app'
 
     // Forward files to backend
     const backendFormData = new FormData()

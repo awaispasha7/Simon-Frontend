@@ -5,7 +5,7 @@ export async function POST(req: NextRequest) {
     const formData = await req.formData()
     
     // Get the backend URL from environment variables
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://simon-backend-blond.vercel.app'
     
     console.log(`Frontend API: Forwarding transcription request to backend at ${backendUrl}/api/v1/transcribe`)
 
