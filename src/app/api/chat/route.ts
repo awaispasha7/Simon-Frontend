@@ -13,6 +13,12 @@ export async function POST(req: NextRequest) {
     
     console.log(`Frontend: Attempting to call backend at ${backendUrl}/api/v1/chat`)
     console.log(`Frontend: Headers - X-Session-ID: ${xSessionId}, X-User-ID: ${xUserId}`)
+    if (attached_files && attached_files.length > 0) {
+      console.log(`Frontend: Forwarding ${attached_files.length} attached file(s) to backend`)
+      attached_files.forEach((f: any, idx: number) => {
+        console.log(`Frontend: File ${idx + 1}: name=${f.name}, type=${f.type}, has_extracted_text=${!!f.extracted_text}, extracted_text_length=${f.extracted_text?.length || 0}`)
+      })
+    }
     if (edit_from_message_id) {
       console.log(`Frontend: Edit mode - deleting from message_id: ${edit_from_message_id}`)
     }
