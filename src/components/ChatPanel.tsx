@@ -663,8 +663,11 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate }: ChatPanel
           name: f.name,
           type: f.type,
           has_extracted_text: !!f.extracted_text,
-          extracted_text_length: f.extracted_text?.length || 0
+          extracted_text_length: f.extracted_text?.length || 0,
+          extracted_text_preview: f.extracted_text ? f.extracted_text.substring(0, 100) : 'none'
         })))
+        // Log the full payload to see what's actually being sent
+        console.log('📤 [CHAT] Full chat payload:', JSON.stringify(chatPayload, null, 2))
       }
       
       const response = await fetch('/api/chat', {
