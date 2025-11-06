@@ -119,18 +119,24 @@ export function UploadDropzone({ sessionId: propSessionId, projectId: propProjec
       }
 
       const data = await response.json()
+      console.log('📤 [UPLOAD] Upload response:', data)
+      console.log('📤 [UPLOAD] Files in response:', data.files)
       
       // If onFileAttached callback is provided, call it for each uploaded file
       if (onFileAttached) {
         data.files.forEach((file: UploadedFile) => {
+          const extractedText = (file as any).extracted_text
+          console.log(`📤 [UPLOAD] File ${file.name} - has extracted_text:`, !!extractedText, extractedText ? `(${extractedText.length} chars)` : '')
+          
           const attachedFile = {
             name: file.name,
             size: file.size,
             url: file.url,
             type: file.type,
             asset_id: file.asset_id,
-            extracted_text: (file as any).extracted_text // Include extracted_text from upload response
+            extracted_text: extractedText // Include extracted_text from upload response
           }
+          console.log('📤 [UPLOAD] Created attachedFile:', { ...attachedFile, extracted_text: attachedFile.extracted_text ? `${attachedFile.extracted_text.length} chars` : 'none' })
           onFileAttached(attachedFile)
         })
       } else {

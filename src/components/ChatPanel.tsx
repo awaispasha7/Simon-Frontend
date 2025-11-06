@@ -649,16 +649,28 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate }: ChatPanel
       // For single-user personal assistant, backend uses fixed user_id automatically
       // No need to send X-User-ID header
       
+      const chatPayload = { 
+        text,
+        session_id: sessionId || undefined, // Allow undefined - backend will create
+        project_id: projectId || undefined,  // Allow undefined - backend will use default
+        attached_files: attachedFiles || [],
+        edit_from_message_id: (isEditing && editMessageId) ? editMessageId : undefined
+      }
+      
+      // Debug: Log attached files and extracted_text
+      if (attachedFiles && attachedFiles.length > 0) {
+        console.log('📤 [CHAT] Sending chat request with attached files:', attachedFiles.map(f => ({
+          name: f.name,
+          type: f.type,
+          has_extracted_text: !!f.extracted_text,
+          extracted_text_length: f.extracted_text?.length || 0
+        })))
+      }
+      
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers,
-        body: JSON.stringify({ 
-          text,
-          session_id: sessionId || undefined, // Allow undefined - backend will create
-          project_id: projectId || undefined,  // Allow undefined - backend will use default
-          attached_files: attachedFiles || [],
-          edit_from_message_id: (isEditing && editMessageId) ? editMessageId : undefined
-        }),
+        body: JSON.stringify(chatPayload),
         signal: controller.signal,
       })
       
