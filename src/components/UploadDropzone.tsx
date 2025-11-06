@@ -22,6 +22,7 @@ interface AttachedFile {
   url: string
   type: string
   asset_id: string
+  extracted_text?: string // Optional: extracted text from documents (from upload endpoint)
 }
 
 interface UploadDropzoneProps {
@@ -127,7 +128,8 @@ export function UploadDropzone({ sessionId: propSessionId, projectId: propProjec
             size: file.size,
             url: file.url,
             type: file.type,
-            asset_id: file.asset_id
+            asset_id: file.asset_id,
+            extracted_text: (file as any).extracted_text // Include extracted_text from upload response
           }
           onFileAttached(attachedFile)
         })

@@ -19,6 +19,7 @@ interface AttachedFile {
   url: string
   type: string
   asset_id: string
+  extracted_text?: string // Optional: extracted text from documents (from upload endpoint)
 }
 
 interface ChatPanelProps {
@@ -362,13 +363,9 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate }: ChatPanel
         return
       }
 
-      // Only load messages if authenticated (for authenticated users)
-      if (!isAuthenticated) {
-        console.log('🔄 [CHAT] Not authenticated yet, skipping message load')
-        return
-      }
-
-      console.log('🔄 [CHAT] Loading messages for session:', sessionIdToUse)
+      // Load messages for both authenticated and anonymous users
+      // Anonymous users can have sessions too (stored in localStorage)
+      console.log('🔄 [CHAT] Loading messages for session:', sessionIdToUse, 'Authenticated:', isAuthenticated)
 
       try {
         const { sessionApi } = await import('@/lib/api')

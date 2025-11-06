@@ -15,6 +15,7 @@ interface AttachedFile {
   url: string
   type: string
   asset_id: string
+  extracted_text?: string // Optional: extracted text from documents (from upload endpoint)
 }
 
 export type BubbleProps = { 
