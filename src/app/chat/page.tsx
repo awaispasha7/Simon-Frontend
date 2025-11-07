@@ -77,11 +77,26 @@ export default function ChatPage() {
       console.log('🔄 Session updated event received:', event.detail)
       const { sessionId: newSessionId, projectId: newProjectId } = event.detail || {}
       
+      // CRITICAL: Only update session if:
+      // 1. We have a new session ID
+      // 2. It's different from current
+      // 3. AND we don't have an explicitly selected session (currentSessionId is empty or matches the new one)
+      // This prevents overriding when user has selected a previous chat
       if (newSessionId && newSessionId !== currentSessionId) {
-        console.log('🔄 Updating current session from event:', newSessionId)
-        setCurrentSessionId(newSessionId)
-        if (newProjectId) {
-          setCurrentProjectId(newProjectId)
+        // Only update if we're in a "new chat" state (no explicit session selected)
+        // OR if the new session matches what we sent (backend confirming our session)
+        // Don't update if user has explicitly selected a different session
+        const isNewChat = !currentSessionId || currentSessionId === ''
+        const isSessionConfirmation = newSessionId === currentSessionId
+        
+        if (isNewChat || isSessionConfirmation) {
+          console.log('🔄 Updating current session from event:', newSessionId)
+          setCurrentSessionId(newSessionId)
+          if (newProjectId) {
+            setCurrentProjectId(newProjectId)
+          }
+        } else {
+          console.log('🔄 Ignoring session update - user has selected a different session:', currentSessionId, 'vs', newSessionId)
         }
       }
     }
