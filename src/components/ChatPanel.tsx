@@ -346,8 +346,16 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate }: ChatPanel
       }
       
       // Update local state with the session we're using
-      setCurrentSessionId(sessionIdToUse || undefined)
-      setCurrentProjectId(projectIdToUse || undefined)
+      // CRITICAL: Always use prop values if provided (selected previous chat takes priority)
+      const finalSessionId = _sessionId || sessionIdToUse || undefined
+      const finalProjectId = _projectId || projectIdToUse || undefined
+      setCurrentSessionId(finalSessionId)
+      setCurrentProjectId(finalProjectId)
+      
+      // Also update ref for immediate access
+      if (finalSessionId) {
+        sessionIdRef.current = finalSessionId
+      }
       
       // For authenticated users with no session ID, create one immediately
       if (isAuthenticated && user && !sessionIdToUse) {
@@ -594,18 +602,24 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate }: ChatPanel
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 60000) // 60 second timeout
       
-      // Use session info from useSession hook for both authenticated and anonymous users
+      // CRITICAL: Prioritize _sessionId prop (from selected previous chat) over all other sources
+      // This ensures that when a user clicks on a previous chat, messages are sent to that chat
+      // Priority: _sessionId prop > currentSessionId state > hookSessionId > localStorage > sessionIdRef
       let sessionId, projectId
-      if (isAuthenticated) {
-        // For authenticated users, prioritize currentSessionId (from selected chat) over hook values
-        // This ensures that when a user clicks on a previous chat, messages are sent to that chat
+      
+      // Always check _sessionId prop first - this is the selected chat from sidebar
+      if (_sessionId) {
+        sessionId = _sessionId
+        projectId = _projectId || undefined
+        console.log('💬 [CHAT] Using session from props (selected previous chat):', sessionId)
+      } else if (isAuthenticated) {
+        // For authenticated users, fall back to state/hook values
         sessionId = currentSessionId || hookSessionId || sessionIdRef.current || (typeof window !== 'undefined' ? localStorage.getItem('anonymous_session_id') : null)
         projectId = currentProjectId || hookProjectId || (typeof window !== 'undefined' ? localStorage.getItem('anonymous_project_id') : null)
       } else {
         // For anonymous users, try multiple sources to find session data
-        // This ensures consistency with upload component
-        sessionId = hookSessionId || sessionIdRef.current || (typeof window !== 'undefined' ? localStorage.getItem('anonymous_session_id') : null)
-        projectId = hookProjectId || (typeof window !== 'undefined' ? localStorage.getItem('anonymous_project_id') : null)
+        sessionId = currentSessionId || hookSessionId || sessionIdRef.current || (typeof window !== 'undefined' ? localStorage.getItem('anonymous_session_id') : null)
+        projectId = currentProjectId || hookProjectId || (typeof window !== 'undefined' ? localStorage.getItem('anonymous_project_id') : null)
         
         // If still no session, try to get from localStorage (for demo users)
         if (!sessionId) {
@@ -650,11 +664,11 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate }: ChatPanel
       // No need to send X-User-ID header
       
       const chatPayload = { 
-        text,
-        session_id: sessionId || undefined, // Allow undefined - backend will create
-        project_id: projectId || undefined,  // Allow undefined - backend will use default
-        attached_files: attachedFiles || [],
-        edit_from_message_id: (isEditing && editMessageId) ? editMessageId : undefined
+          text,
+          session_id: sessionId || undefined, // Allow undefined - backend will create
+          project_id: projectId || undefined,  // Allow undefined - backend will use default
+          attached_files: attachedFiles || [],
+          edit_from_message_id: (isEditing && editMessageId) ? editMessageId : undefined
       }
       
       // Debug: Log attached files and extracted_text
