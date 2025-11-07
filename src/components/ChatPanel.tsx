@@ -744,62 +744,78 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate }: ChatPanel
               } else if (data.type === 'metadata') {
                 // Handle metadata chunk - store session_id and project_id for next message
                 if (data.metadata?.session_id) {
-                  // CRITICAL: Update refs immediately but don't trigger message reload during streaming
-                  sessionIdRef.current = data.metadata.session_id
-                  prevSessionIdRef.current = data.metadata.session_id
+                  const returnedSessionId = data.metadata.session_id
                   
-                  // Update state but don't trigger reload (isStreamingRef prevents it in useEffect)
-                  setCurrentSessionId(data.metadata.session_id)
+                  // CRITICAL: Only update if:
+                  // 1. We don't have an explicit session from props (user selected a previous chat)
+                  // 2. OR the returned session matches what we sent (backend confirming our session)
+                  const shouldUpdate = !_sessionId || returnedSessionId === sessionId
                   
-                  // Persist session to localStorage
-                  try {
-                    const sessionData = {
-                      sessionId: data.metadata.session_id,
-                      projectId: data.metadata?.project_id,
-                      isAuthenticated: isAuthenticated
+                  if (shouldUpdate) {
+                    // Update refs immediately but don't trigger message reload during streaming
+                    sessionIdRef.current = returnedSessionId
+                    prevSessionIdRef.current = returnedSessionId
+                    
+                    // Only update state if we don't have an explicit session from props
+                    if (!_sessionId) {
+                      setCurrentSessionId(returnedSessionId)
                     }
                     
-                    localStorage.setItem('stories_we_tell_session', JSON.stringify(sessionData))
-                    console.log('💾 Session persisted to localStorage (during streaming):', data.metadata.session_id)
-                    
-                    // Defer session update event until streaming completes to prevent message reload
-                    // This prevents the useEffect from overwriting messages during streaming
-                    setTimeout(() => {
-                      // Only dispatch if streaming has completed
-                      if (!isStreamingRef.current) {
-                        window.dispatchEvent(new CustomEvent('sessionUpdated', { 
-                          detail: { 
-                            sessionId: data.metadata.session_id,
-                            projectId: data.metadata?.project_id 
-                          } 
-                        }))
-                        console.log('📡 Session update event dispatched (after streaming):', data.metadata.session_id)
-                        
-                        if (onSessionUpdate) {
-                          onSessionUpdate(data.metadata.session_id, data.metadata?.project_id)
-                        }
-                      } else {
-                        // Still streaming - defer until complete
-                        const checkInterval = setInterval(() => {
-                          if (!isStreamingRef.current) {
-                            clearInterval(checkInterval)
-                            window.dispatchEvent(new CustomEvent('sessionUpdated', { 
-                              detail: { 
-                                sessionId: data.metadata.session_id,
-                                projectId: data.metadata?.project_id 
-                              } 
-                            }))
-                            if (onSessionUpdate) {
-                              onSessionUpdate(data.metadata.session_id, data.metadata?.project_id)
-                            }
-                          }
-                        }, 100)
-                        // Clear interval after 5 seconds max
-                        setTimeout(() => clearInterval(checkInterval), 5000)
+                    // Persist session to localStorage
+                    try {
+                      const sessionData = {
+                        sessionId: returnedSessionId,
+                        projectId: data.metadata?.project_id,
+                        isAuthenticated: isAuthenticated
                       }
-                    }, 100) // Small delay
-                  } catch (error) {
-                    console.error('Failed to persist session:', error)
+                      
+                      localStorage.setItem('stories_we_tell_session', JSON.stringify(sessionData))
+                      console.log('💾 Session persisted to localStorage (during streaming):', returnedSessionId)
+                      
+                      // Defer session update event until streaming completes to prevent message reload
+                      // This prevents the useEffect from overwriting messages during streaming
+                      setTimeout(() => {
+                        // Only dispatch if streaming has completed
+                        if (!isStreamingRef.current) {
+                          window.dispatchEvent(new CustomEvent('sessionUpdated', { 
+                            detail: { 
+                              sessionId: returnedSessionId,
+                              projectId: data.metadata?.project_id 
+                            } 
+                          }))
+                          console.log('📡 Session update event dispatched (after streaming):', returnedSessionId)
+                          
+                          // Only call onSessionUpdate if we don't have an explicit session from props
+                          // This prevents overriding the selected previous chat
+                          if (onSessionUpdate && !_sessionId) {
+                            onSessionUpdate(returnedSessionId, data.metadata?.project_id)
+                          }
+                        } else {
+                          // Still streaming - defer until complete
+                          const checkInterval = setInterval(() => {
+                            if (!isStreamingRef.current) {
+                              clearInterval(checkInterval)
+                              window.dispatchEvent(new CustomEvent('sessionUpdated', { 
+                                detail: { 
+                                  sessionId: returnedSessionId,
+                                  projectId: data.metadata?.project_id 
+                                } 
+                              }))
+                              // Only call onSessionUpdate if we don't have an explicit session from props
+                              if (onSessionUpdate && !_sessionId) {
+                                onSessionUpdate(returnedSessionId, data.metadata?.project_id)
+                              }
+                            }
+                          }, 100)
+                          // Clear interval after 5 seconds max
+                          setTimeout(() => clearInterval(checkInterval), 5000)
+                        }
+                      }, 100) // Small delay
+                    } catch (error) {
+                      console.error('Failed to persist session:', error)
+                    }
+                  } else {
+                    console.log('🔄 Ignoring session update - user has selected a different session:', _sessionId, 'vs returned:', returnedSessionId)
                   }
                 }
                 if (data.metadata?.project_id) {
