@@ -550,7 +550,7 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate }: ChatPanel
     scrollToBottom()
   }, [messages])
 
-  const handleSendMessage = async (text: string, attachedFiles?: AttachedFile[]) => {
+  const handleSendMessage = async (text: string, attachedFiles?: AttachedFile[], enableWebSearch?: boolean) => {
     // Allow sending if there's text OR attached files
     if ((!text.trim() && (!attachedFiles || attachedFiles.length === 0)) || isLoading) {
       return
@@ -668,7 +668,8 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate }: ChatPanel
           session_id: sessionId || undefined, // Allow undefined - backend will create
           project_id: projectId || undefined,  // Allow undefined - backend will use default
           attached_files: attachedFiles || [],
-          edit_from_message_id: (isEditing && editMessageId) ? editMessageId : undefined
+          edit_from_message_id: (isEditing && editMessageId) ? editMessageId : undefined,
+          enable_web_search: enableWebSearch || false
       }
       
       // Debug: Log attached files and extracted_text
