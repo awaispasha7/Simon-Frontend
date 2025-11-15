@@ -336,7 +336,7 @@ export function SessionsSidebar({
         
         // Clear localStorage
         try {
-          localStorage.removeItem('stories_we_tell_session')
+          localStorage.removeItem('chat_session')
         } catch (error) {
           console.error('Failed to clear localStorage:', error)
         }
@@ -628,9 +628,9 @@ export function SessionsSidebar({
               </>
             ) : (
               <>
-                <h3 className={`text-lg font-medium ${colors.text} mb-2`}>Welcome to Stories We Tell</h3>
+                <h3 className={`text-lg font-medium ${colors.text} mb-2`}>Welcome to Chat</h3>
                 <p className={`${colors.textSecondary} text-sm mb-8`}>
-                  Sign up to save your conversations and access your story development history
+                  Sign up to save your conversations and access your chat history
                 </p>
                 
                 {/* Beautiful Auth buttons in single line */}

@@ -1,18 +1,20 @@
-# Frontend - Stories We Tell
+# Frontend - Chat Application
 
-A modern Next.js frontend application for the Stories We Tell cinematic intake chatbot, built with TypeScript, Tailwind CSS, and React Query. An AI-powered story development assistant that helps writers bring their narratives to life through conversational interaction.
+A modern Next.js frontend application for an AI chat assistant, built with TypeScript, Tailwind CSS, and React Query. An AI-powered assistant that helps users through conversational interaction.
 
 ## ✨ Key Features
 
 ### 🎭 Story Development
+
 - **AI-Powered Chat Interface**: Conversational story development with context-aware AI assistance
 - **Interactive Story Building**: Natural dialogue to develop characters, plot, and world-building
 - **Smart Dossier Generation**: Automatically extracts and structures story elements from conversations
 - **Real-time Story Analysis**: AI analyzes your story in real-time and provides intelligent feedback
 
 ### 📊 Story Dossier System
+
 - **Automatic Story Extraction**: AI intelligently extracts characters, themes, locations, and plot points
-- **Structured Story Elements**: 
+- **Structured Story Elements**:
   - Character profiles with relationships and arcs
   - Key themes and motifs
   - Important locations and settings
@@ -21,6 +23,7 @@ A modern Next.js frontend application for the Stories We Tell cinematic intake c
 - **Visual Story Map**: Clean, organized view of all story elements
 
 ### 💬 Session Management
+
 - **Multi-Chat Support**: Manage multiple story projects simultaneously
 - **Session History**: Access and continue previous story conversations
 - **Persistent Sessions**: Your chats are automatically saved and synced
@@ -28,6 +31,7 @@ A modern Next.js frontend application for the Stories We Tell cinematic intake c
 - **Session Metadata**: Track creation time, last message, and message count
 
 ### 🔐 Authentication & User Management
+
 - **Supabase Authentication**: Secure login with email/password
 - **User Profiles**: Personalized experience with display names and avatars
 - **Anonymous Sessions**: Start chatting without signing up
@@ -35,6 +39,7 @@ A modern Next.js frontend application for the Stories We Tell cinematic intake c
 - **Multi-device Sync**: Access your stories from any device
 
 ### 🎨 User Interface
+
 - **Modern Design**: Clean, professional interface with smooth animations
 - **Dark/Light Theme**: Full theme support with system preference detection
 - **Responsive Layout**: Optimized for desktop, tablet, and mobile devices
@@ -43,6 +48,7 @@ A modern Next.js frontend application for the Stories We Tell cinematic intake c
 - **Keyboard Shortcuts**: Efficient navigation for power users
 
 ### 🚀 Performance & Developer Experience
+
 - **Real-time Streaming**: Server-sent events for instant AI responses
 - **Optimistic Updates**: Instant UI feedback while waiting for server responses
 - **Smart Caching**: React Query for efficient data fetching and caching
@@ -81,7 +87,7 @@ A modern Next.js frontend application for the Stories We Tell cinematic intake c
 
 ## Prerequisites
 
-- Node.js 18+ 
+- Node.js 18+
 - npm, yarn, or pnpm
 - Backend API running (see backend README)
 - Supabase account and project (for authentication and database)
@@ -89,18 +95,20 @@ A modern Next.js frontend application for the Stories We Tell cinematic intake c
 ## Installation
 
 1. **Navigate to the frontend directory:**
+
    ```bash
    cd stories-we-tell
    ```
 
 2. **Install dependencies:**
+
    ```bash
    # Using npm
    npm install
-   
+
    # Using yarn
    yarn install
-   
+
    # Using pnpm (recommended)
    pnpm install
    ```
@@ -133,7 +141,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
 # Using npm
 npm run dev
 
-# Using yarn  
+# Using yarn
 yarn dev
 
 # Using pnpm
@@ -196,13 +204,15 @@ stories-we-tell/
 ## Key Components
 
 ### Topbar
+
 - Application header with branding and navigation
 - User authentication controls (sign in/sign up/sign out)
 - User profile display with avatar
 - Theme toggle (dark/light mode)
 - Responsive mobile menu
 
-### ChatPanel  
+### ChatPanel
+
 - Main chat interface with streaming AI responses
 - Message input with auto-resize textarea
 - Real-time conversation handling with typing indicators
@@ -212,6 +222,7 @@ stories-we-tell/
 - Smart session creation and continuation
 
 ### SessionsSidebar
+
 - List of all user chat sessions
 - Session previews with first message
 - Session metadata (creation date, message count)
@@ -221,6 +232,7 @@ stories-we-tell/
 - Responsive mobile-friendly layout
 
 ### SidebarDossier
+
 - Real-time story dossier display
 - Structured story elements:
   - **Characters**: Names, descriptions, relationships, arcs
@@ -232,6 +244,7 @@ stories-we-tell/
 - Responsive collapsible sidebar
 
 ### Authentication Components
+
 - Sign-in and sign-up forms
 - Email/password authentication via Supabase
 - User profile management
@@ -243,11 +256,13 @@ stories-we-tell/
 The application uses **Tailwind CSS v4** with a custom design system:
 
 ### Color Palette
+
 - **Brand Colors**: Custom purple theme (`#645bb2`)
 - **Semantic Colors**: Background, foreground, muted, accent
 - **Dark Mode**: Full dark mode support with CSS variables
 
 ### Design Tokens
+
 ```css
 /* Brand Colors */
 --color-brand: #645bb2
@@ -261,6 +276,7 @@ The application uses **Tailwind CSS v4** with a custom design system:
 ## State Management
 
 ### Zustand Store
+
 The application uses Zustand for client-side state management:
 
 ```typescript
@@ -268,19 +284,20 @@ The application uses Zustand for client-side state management:
 const useChatStore = create<ChatStore>((set) => ({
   init: () => {
     // Initialize chat store
-  }
-}))
+  },
+}));
 ```
 
 ### React Query
+
 For server state management and data fetching:
 
 ```typescript
 // Example query for fetching dossier data
-const { data } = useQuery({ 
-  queryKey: ['dossier'], 
-  queryFn: () => api.get('dossier').json<any>() 
-})
+const { data } = useQuery({
+  queryKey: ["dossier"],
+  queryFn: () => api.get("dossier").json<any>(),
+});
 ```
 
 ## API Integration
@@ -288,7 +305,7 @@ const { data } = useQuery({
 The frontend communicates with the backend API through:
 
 - **Base URL**: Configurable via `NEXT_PUBLIC_API_URL`
-- **Endpoints**: 
+- **Endpoints**:
   - `POST /chat` - Send chat messages
   - `GET /dossier` - Fetch character/story information
 - **Error Handling**: Comprehensive error states and loading indicators
@@ -298,9 +315,9 @@ The frontend communicates with the backend API through:
 The application is fully responsive with:
 
 - **Mobile First**: Optimized for mobile devices
-- **Breakpoints**: 
+- **Breakpoints**:
   - `sm`: 640px
-  - `md`: 768px  
+  - `md`: 768px
   - `lg`: 1024px
   - `xl`: 1280px
 - **Grid Layout**: Responsive grid system for chat and sidebar
@@ -364,6 +381,7 @@ npm start
 ### Other Platforms
 
 The application can be deployed to any platform that supports Next.js:
+
 - Netlify
 - AWS Amplify
 - Railway
@@ -395,22 +413,26 @@ The application can be deployed to any platform that supports Next.js:
 ## Dependencies
 
 ### Core
+
 - **Next.js 15**: React framework
 - **React 18**: UI library
 - **TypeScript**: Type safety
 
 ### Styling
+
 - **Tailwind CSS v4**: Utility-first CSS framework
 - **Lucide React**: Icon library
 
 ### State Management
+
 - **Zustand**: Client state management
 - **React Query**: Server state management
 
 ### Development
+
 - **ESLint**: Code linting
 - **PostCSS**: CSS processing
 
 ## License
 
-This project is part of the Stories We Tell application suite.
+This project is part of the Chat application suite.

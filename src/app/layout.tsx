@@ -12,8 +12,8 @@ import { GlobalLoader } from '@/components/GlobalLoader'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata = {
-  title: 'Stories We Tell',
-  description: 'Cinematic intake chatbot',
+  title: 'Chat',
+  description: 'AI chat assistant',
 }
 
 export default function RootLayout({ children }: { children: ReactNode }) {

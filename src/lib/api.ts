@@ -6,7 +6,7 @@ const getUserHeaders = () => {
   
   try {
     const user = localStorage.getItem('user')
-    const session = localStorage.getItem('stories_we_tell_session')
+    const session = localStorage.getItem('chat_session')
     
     const headers: Record<string, string> = {}
     

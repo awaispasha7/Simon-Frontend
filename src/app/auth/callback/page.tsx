@@ -27,7 +27,7 @@ export default function AuthCallback() {
         // If we have a session, the email was confirmed successfully
         if (data.session) {
           setStatus('success')
-          setMessage('Welcome to Stories We Tell!')
+          setMessage('Welcome!')
           
           // Redirect admins to admin panel, others to chat
           const userEmail = data.session.user?.email
@@ -62,7 +62,7 @@ export default function AuthCallback() {
               setMessage('The confirmation link has expired or is invalid.')
             } else if (verifyData.session) {
               setStatus('success')
-              setMessage('Welcome to Stories We Tell!')
+              setMessage('Welcome!')
               
               // Redirect admins to admin panel, others to chat
               const userEmail = verifyData.session.user?.email

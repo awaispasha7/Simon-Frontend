@@ -1,6 +1,6 @@
 # Google OAuth Setup Guide
 
-This guide will help you set up Google OAuth authentication for the Stories We Tell application.
+This guide will help you set up Google OAuth authentication for the Chat application.
 
 ## Prerequisites
 

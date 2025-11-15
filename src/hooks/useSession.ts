@@ -6,7 +6,7 @@ import { useAuth } from '@/lib/auth-context'
 let globalSessionCreationInProgress = false
 
 // Session persistence key
-const SESSION_STORAGE_KEY = 'stories_we_tell_session'
+const SESSION_STORAGE_KEY = 'chat_session'
 
 interface SessionState {
   sessionId: string | null
@@ -141,7 +141,7 @@ export function useSession(sessionId?: string, projectId?: string) {
         // Mark as blocked to prevent retries
         if (typeof window !== 'undefined') {
           try {
-            localStorage.setItem('stories_we_tell_session_creation_blocked', 'true')
+            localStorage.setItem('chat_session_creation_blocked', 'true')
           } catch (e) {
             // Ignore localStorage errors
           }
@@ -161,7 +161,7 @@ export function useSession(sessionId?: string, projectId?: string) {
       // Clear any previous block on success
       if (typeof window !== 'undefined') {
         try {
-          localStorage.removeItem('stories_we_tell_session_creation_blocked')
+          localStorage.removeItem('chat_session_creation_blocked')
         } catch (e) {
           // Ignore localStorage errors
         }
@@ -222,8 +222,8 @@ export function useSession(sessionId?: string, projectId?: string) {
         // Mark as blocked temporarily (will clear after page reload or manual retry)
         if (typeof window !== 'undefined') {
           try {
-            localStorage.setItem('stories_we_tell_session_creation_blocked', 'true')
-            localStorage.setItem('stories_we_tell_session_error', JSON.stringify({
+            localStorage.setItem('chat_session_creation_blocked', 'true')
+            localStorage.setItem('chat_session_error', JSON.stringify({
               message: errorMessage,
               statusCode,
               timestamp: Date.now()
@@ -238,7 +238,7 @@ export function useSession(sessionId?: string, projectId?: string) {
         // Mark that we've tried and failed - don't retry for this error
         if (typeof window !== 'undefined') {
           try {
-            localStorage.setItem('stories_we_tell_session_creation_blocked', 'true')
+            localStorage.setItem('chat_session_creation_blocked', 'true')
           } catch (e) {
             // Ignore localStorage errors
           }
@@ -371,8 +371,8 @@ export function useSession(sessionId?: string, projectId?: string) {
     let isSessionCreationBlocked = false
     if (typeof window !== 'undefined') {
       try {
-        const blocked = localStorage.getItem('stories_we_tell_session_creation_blocked')
-        const errorInfo = localStorage.getItem('stories_we_tell_session_error')
+        const blocked = localStorage.getItem('chat_session_creation_blocked')
+        const errorInfo = localStorage.getItem('chat_session_error')
         if (blocked === 'true') {
           isSessionCreationBlocked = true
           // Check if it was a server error (500/503) or a client error
@@ -393,8 +393,8 @@ export function useSession(sessionId?: string, projectId?: string) {
             console.log('🔄 [SESSION] Session creation previously blocked, still missing project_id')
           } else {
             // Clear the block if we now have project_id (might have been a transient error)
-            localStorage.removeItem('stories_we_tell_session_creation_blocked')
-            localStorage.removeItem('stories_we_tell_session_error')
+            localStorage.removeItem('chat_session_creation_blocked')
+            localStorage.removeItem('chat_session_error')
           }
         }
       } catch (error) {

@@ -249,7 +249,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       // Clear all localStorage data
       localStorage.removeItem('user')
-      localStorage.removeItem('stories_we_tell_session')
+      localStorage.removeItem('chat_session')
       localStorage.removeItem('anonymous_session_id')
       localStorage.removeItem('anonymous_project_id')
       localStorage.removeItem('anonymous_session_expires_at')
@@ -264,7 +264,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error('Logout error:', error)
       // Even if logout fails, clear localStorage and reset state
       localStorage.removeItem('user')
-      localStorage.removeItem('stories_we_tell_session')
+      localStorage.removeItem('chat_session')
       localStorage.removeItem('anonymous_session_id')
       localStorage.removeItem('anonymous_project_id')
       localStorage.removeItem('anonymous_session_expires_at')

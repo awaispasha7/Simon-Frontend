@@ -176,7 +176,7 @@ export default function SignupPage() {
               {/* Header */}
               <div className="auth-header">
                 <h2 className="auth-title">Create Account</h2>
-                <p className="auth-subtitle">Join Stories We Tell and start your creative journey</p>
+                <p className="auth-subtitle">Join Chat and start your journey</p>
               </div>
 
               {/* Form */}

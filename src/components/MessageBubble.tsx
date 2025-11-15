@@ -62,7 +62,7 @@ export function MessageBubble({
           <div className="bg-linear-to-br from-green-200 to-green-300 text-green-800 text-xs font-bold shadow-sm rounded-full w-full h-full flex items-center justify-center">
             <Image 
               src="/swt-logo.svg" 
-              alt="SWT Assistant" 
+              alt="AI Assistant" 
               width={36} 
               height={36}
               className="w-9 h-9"

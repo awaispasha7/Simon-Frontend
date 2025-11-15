@@ -115,7 +115,7 @@ export default function ChatPage() {
         setCurrentProjectId('')
         setCurrentSessionId('')
         try {
-          localStorage.removeItem('stories_we_tell_session')
+          localStorage.removeItem('chat_session')
         } catch (error) {
           console.error('Failed to clear localStorage:', error)
         }
@@ -133,13 +133,13 @@ export default function ChatPage() {
       
       // Update localStorage to persist the selection
       try {
-        const stored = localStorage.getItem('stories_we_tell_session')
+        const stored = localStorage.getItem('chat_session')
         if (stored) {
           const parsed = JSON.parse(stored)
           parsed.projectId = mostRecentProject.project_id
-          localStorage.setItem('stories_we_tell_session', JSON.stringify(parsed))
+          localStorage.setItem('chat_session', JSON.stringify(parsed))
         } else {
-          localStorage.setItem('stories_we_tell_session', JSON.stringify({
+          localStorage.setItem('chat_session', JSON.stringify({
             projectId: mostRecentProject.project_id
           }))
         }
@@ -157,7 +157,7 @@ export default function ChatPage() {
     // Only show modal for anonymous users (not authenticated)
     if (!isAuthenticated && !user) {
       // Check if user has seen the modal before (localStorage)
-      const hasSeenModal = localStorage.getItem('stories_we_tell_seen_login_modal')
+      const hasSeenModal = localStorage.getItem('chat_seen_login_modal')
       // Temporarily comment out for testing - uncomment for production
       if (!hasSeenModal) {
       // if (true) { // Always show for testing
@@ -174,7 +174,7 @@ export default function ChatPage() {
 
   // Show sidebar hint for new users on mobile
   useEffect(() => {
-    const hasSeenSidebarHint = localStorage.getItem('stories_we_tell_seen_sidebar_hint')
+    const hasSeenSidebarHint = localStorage.getItem('chat_seen_sidebar_hint')
     const isMobile = window.innerWidth < 640
     
     if (!hasSeenSidebarHint && isMobile && isSidebarCollapsed) {
@@ -195,7 +195,7 @@ export default function ChatPage() {
         // Only restore from localStorage if we don't already have session/project set
         // This prevents overriding newly created projects
         if (!currentSessionId && !currentProjectId) {
-          const stored = localStorage.getItem('stories_we_tell_session')
+          const stored = localStorage.getItem('chat_session')
           if (stored) {
             const parsed = JSON.parse(stored)
             if (parsed.sessionId) {
@@ -268,7 +268,7 @@ export default function ChatPage() {
   const handleCloseModal = () => {
     setShowLoginModal(false)
     // Mark that user has seen the modal
-    localStorage.setItem('stories_we_tell_seen_login_modal', 'true')
+    localStorage.setItem('chat_seen_login_modal', 'true')
   }
 
   const handleSignup = () => {
@@ -300,7 +300,7 @@ export default function ChatPage() {
       const mostRecentProject = projects[0] // Projects are ordered by updated_at DESC
       
       try {
-        localStorage.removeItem('stories_we_tell_session')
+        localStorage.removeItem('chat_session')
         console.log('🆕 [PAGE] Cleared localStorage for new story')
       } catch (error) {
         console.error('Failed to clear localStorage:', error)
@@ -334,7 +334,7 @@ export default function ChatPage() {
       console.log('🔄 [PAGE] Projects refreshed before setting state')
       
       // Clear old session data first
-      localStorage.removeItem('stories_we_tell_session')
+      localStorage.removeItem('chat_session')
       console.log('🧹 [PAGE] Cleared old localStorage session')
       
       // Create a session for this new project automatically
@@ -353,7 +353,7 @@ export default function ChatPage() {
         
         // Store in localStorage FIRST before setting state
         try {
-          localStorage.setItem('stories_we_tell_session', JSON.stringify({
+          localStorage.setItem('chat_session', JSON.stringify({
             sessionId: sessionResponse.session_id,
             projectId: projectId,
             isAuthenticated: true
@@ -535,7 +535,7 @@ export default function ChatPage() {
                     <button
                       onClick={() => {
                         setShowSidebarHint(false)
-                        localStorage.setItem('stories_we_tell_seen_sidebar_hint', 'true')
+                        localStorage.setItem('chat_seen_sidebar_hint', 'true')
                       }}
                       className="px-3 py-1 text-xs bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-all duration-200 hover:scale-105 active:scale-95 shadow-sm hover:shadow-md"
                     >
@@ -545,7 +545,7 @@ export default function ChatPage() {
                       onClick={() => {
                         setShowSidebarHint(false)
                         setIsSidebarCollapsed(false)
-                        localStorage.setItem('stories_we_tell_seen_sidebar_hint', 'true')
+                        localStorage.setItem('chat_seen_sidebar_hint', 'true')
                       }}
                       className="px-3 py-1 text-xs bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-all duration-200 hover:scale-105 active:scale-95 shadow-sm hover:shadow-md"
                     >

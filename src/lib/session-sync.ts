@@ -21,7 +21,7 @@ export interface SessionValidationResult {
   session?: StoredSession
 }
 
-const SESSION_STORAGE_KEY = 'stories_we_tell_session'
+const SESSION_STORAGE_KEY = 'chat_session'
 const SESSION_VALIDATION_INTERVAL = 10 * 60 * 1000 // 10 minutes
 const SESSION_CLEANUP_INTERVAL = 60 * 60 * 1000 // 60 minutes
 

@@ -58,7 +58,7 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProje
     if (isAuthenticated) {
       // Clear localStorage to prevent restoring old session
       try {
-        localStorage.removeItem('stories_we_tell_session')
+        localStorage.removeItem('chat_session')
         console.log('🆕 [CHAT] Cleared localStorage for authenticated user new story')
       } catch (error) {
         console.error('Failed to clear localStorage:', error)
@@ -85,7 +85,7 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProje
           setCurrentSessionId('')
           setCurrentProjectId('')
           sessionIdRef.current = ''
-          localStorage.removeItem('stories_we_tell_session')
+          localStorage.removeItem('chat_session')
           setMessages([
             {
               role: 'assistant',
@@ -198,7 +198,7 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProje
       setCurrentProjectId(_projectId)
       // Also update localStorage to match props (ensures consistency)
       try {
-        const stored = localStorage.getItem('stories_we_tell_session')
+        const stored = localStorage.getItem('chat_session')
         if (stored) {
           const parsed = JSON.parse(stored)
           if (parsed.projectId !== _projectId) {
@@ -206,7 +206,7 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProje
             if (_sessionId) {
               parsed.sessionId = _sessionId
             }
-            localStorage.setItem('stories_we_tell_session', JSON.stringify(parsed))
+            localStorage.setItem('chat_session', JSON.stringify(parsed))
             console.log('💾 [CHAT] Updated localStorage to match props')
           }
         }
@@ -220,7 +220,7 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProje
   useEffect(() => {
     const checkLocalStorageSession = () => {
       try {
-        const stored = localStorage.getItem('stories_we_tell_session')
+        const stored = localStorage.getItem('chat_session')
         if (stored) {
           const parsed = JSON.parse(stored)
           if (parsed.sessionId) {
@@ -260,7 +260,7 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProje
 
     // Listen for localStorage changes
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'stories_we_tell_session') {
+      if (e.key === 'chat_session') {
         // For anonymous users, allow localStorage changes
         if (!isAuthenticated) {
           console.log('🔄 [DEMO] Anonymous user - allowing localStorage changes')
@@ -312,7 +312,7 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProje
       // Determine which session ID to use: prop > hook > current state > localStorage
       const sessionIdToUse = _sessionId || hookSessionId || currentSessionId || (typeof window !== 'undefined' ? (() => {
         try {
-          const stored = localStorage.getItem('stories_we_tell_session')
+          const stored = localStorage.getItem('chat_session')
           if (stored) {
             const parsed = JSON.parse(stored)
             return parsed.sessionId || undefined
@@ -325,7 +325,7 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProje
       
       const projectIdToUse = _projectId || hookProjectId || currentProjectId || (typeof window !== 'undefined' ? (() => {
         try {
-          const stored = localStorage.getItem('stories_we_tell_session')
+          const stored = localStorage.getItem('chat_session')
           if (stored) {
             const parsed = JSON.parse(stored)
             return parsed.projectId || undefined
@@ -467,7 +467,7 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProje
             
             // Clear the invalid session from localStorage immediately
             try {
-              localStorage.removeItem('stories_we_tell_session')
+              localStorage.removeItem('chat_session')
               console.log('🧹 Cleared invalid session from localStorage')
             } catch (e) {
               console.error('Failed to clear session from localStorage:', e)
@@ -648,7 +648,7 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProje
         // If still no session, try to get from localStorage (for demo users)
         if (!sessionId) {
           try {
-            const stored = typeof window !== 'undefined' ? localStorage.getItem('stories_we_tell_session') : null
+            const stored = typeof window !== 'undefined' ? localStorage.getItem('chat_session') : null
             if (stored) {
               const parsed = JSON.parse(stored)
               if (parsed.sessionId) {
@@ -675,7 +675,7 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProje
             propProjectId: _projectId,
             localStorageProjectId: typeof window !== 'undefined' ? (() => {
               try {
-                const stored = localStorage.getItem('stories_we_tell_session')
+                const stored = localStorage.getItem('chat_session')
                 if (stored) {
                   const parsed = JSON.parse(stored)
                   return parsed.projectId || null
@@ -812,11 +812,11 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProje
                       isAuthenticated: isAuthenticated
                     }
                     
-                    localStorage.setItem('stories_we_tell_session', JSON.stringify(sessionData))
+                    localStorage.setItem('chat_session', JSON.stringify(sessionData))
                     console.log('💾 Session persisted to localStorage:', data.metadata.session_id)
                     
                     // Verify the localStorage write was successful
-                    const stored = localStorage.getItem('stories_we_tell_session')
+                    const stored = localStorage.getItem('chat_session')
                     if (stored) {
                       const parsed = JSON.parse(stored)
                       if (parsed.sessionId === data.metadata.session_id) {
@@ -935,7 +935,7 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProje
       dossierDispatchTimerRef.current = window.setTimeout(() => {
         triggerRefresh()
         try {
-          const stored = localStorage.getItem('stories_we_tell_session')
+          const stored = localStorage.getItem('chat_session')
           const proj = (stored ? JSON.parse(stored)?.projectId : currentProjectId || hookProjectId || _projectId) || undefined
           window.dispatchEvent(new CustomEvent('dossierUpdated', { detail: { projectId: proj } }))
         } catch {}
@@ -961,12 +961,12 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProje
               <div className="w-16 h-16 bg-linear-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center mb-6 shadow-lg">
                 <span className="text-2xl">🎬</span>
               </div>
-              <h2 className="text-2xl font-bold text-gray-800 mb-3">Welcome to Stories We Tell</h2>
+              <h2 className="text-2xl font-bold text-gray-800 mb-3">Welcome to Chat</h2>
               <p className="text-gray-600 max-w-md leading-relaxed">
-                Let's bring your story to life, one step at a time.
+                Start a conversation to get started.
               </p>
               <div className="mt-6 text-sm text-gray-500">
-                Share your story idea to get started
+                Start a conversation to get started
               </div>
             </div>
           )}
