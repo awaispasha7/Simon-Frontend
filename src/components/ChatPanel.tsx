@@ -705,17 +705,69 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProje
         }
       }
       
-      // CRITICAL: Ensure we have a valid session before proceeding
+      // CRITICAL: Create a session if one doesn't exist
       if (!sessionId) {
-        console.error('💬 [CHAT] ERROR: No session ID available! This will create a new session.')
-        console.error('💬 [CHAT] Available session sources:', {
+        console.log('💬 [CHAT] No session ID available, creating new session...')
+        console.log('💬 [CHAT] Available session sources:', {
           hookSessionId,
           sessionIdRef: sessionIdRef.current,
           currentSessionId,
           localStorageSession: typeof window !== 'undefined' ? localStorage.getItem('anonymous_session_id') : null
         })
-        // Don't proceed without a session - this prevents creating new sessions
-        throw new Error('No session ID available - cannot send message')
+        
+        try {
+          // Dynamically import sessionApi
+          const { sessionApi } = await import('@/lib/api')
+          
+          // Create a new session via the API
+          const sessionResponse = await sessionApi.getOrCreateSession(undefined, projectId || undefined) as {
+            success?: boolean
+            session_id?: string
+            project_id?: string
+            is_authenticated?: boolean
+          }
+          
+          if (sessionResponse && sessionResponse.session_id) {
+            console.log('✅ [CHAT] Created new session:', sessionResponse.session_id)
+            sessionId = sessionResponse.session_id
+            sessionIdRef.current = sessionResponse.session_id
+            
+            // Update project ID if returned from API
+            if (sessionResponse.project_id) {
+              projectId = sessionResponse.project_id
+              setCurrentProjectId(sessionResponse.project_id)
+            }
+            
+            // Store in localStorage
+            if (typeof window !== 'undefined') {
+              try {
+                const sessionData = {
+                  sessionId: sessionResponse.session_id,
+                  projectId: sessionResponse.project_id || projectId,
+                  isAuthenticated: sessionResponse.is_authenticated || isAuthenticated
+                }
+                localStorage.setItem('chat_session', JSON.stringify(sessionData))
+                console.log('💾 [CHAT] Stored new session in localStorage')
+              } catch (e) {
+                console.error('Failed to store session in localStorage:', e)
+              }
+            }
+            
+            // Update state
+            setCurrentSessionId(sessionResponse.session_id)
+            
+            // Notify parent component
+            if (onSessionUpdate) {
+              onSessionUpdate(sessionResponse.session_id, sessionResponse.project_id || projectId)
+            }
+          } else {
+            console.error('❌ [CHAT] Failed to create session - no session_id in response')
+            throw new Error('Failed to create session')
+          }
+        } catch (sessionError) {
+          console.error('❌ [CHAT] Error creating session:', sessionError)
+          throw new Error('Failed to create session. Please try again.')
+        }
       }
       
       // Get headers for the request
