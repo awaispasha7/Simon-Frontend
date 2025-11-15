@@ -1,0 +1,40 @@
+'use client'
+
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { useAuth } from '@/lib/auth-context'
+
+interface AuthGuardProps {
+  children: React.ReactNode
+  redirectTo?: string
+}
+
+export function AuthGuard({ children, redirectTo = '/auth/login' }: AuthGuardProps) {
+  const { isAuthenticated, isLoading } = useAuth()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.push(redirectTo)
+    }
+  }, [isAuthenticated, isLoading, router, redirectTo])
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-blue-50 via-white to-green-50">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-linear-to-br from-blue-500 to-green-500 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+            <span className="text-2xl text-white font-bold">SW</span>
+          </div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!isAuthenticated) {
+    return null
+  }
+
+  return <>{children}</>
+}
