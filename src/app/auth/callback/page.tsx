@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { CheckCircle, XCircle, ArrowLeft, Mail } from 'lucide-react'
-import { isAdminEmail, getAdminRedirectPath, getDefaultRedirectPath } from '@/lib/admin-utils'
 
 export default function AuthCallback() {
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
@@ -29,14 +28,8 @@ export default function AuthCallback() {
           setStatus('success')
           setMessage('Welcome!')
           
-          // Redirect admins to admin panel, others to chat
-          const userEmail = data.session.user?.email
-          const redirectPath = isAdminEmail(userEmail)
-            ? getAdminRedirectPath()
-            : getDefaultRedirectPath()
-          
           setTimeout(() => {
-            router.push(redirectPath)
+            router.push('/chat')
           }, 2000)
         } else {
           // No session found - this could mean:
@@ -64,14 +57,8 @@ export default function AuthCallback() {
               setStatus('success')
               setMessage('Welcome!')
               
-              // Redirect admins to admin panel, others to chat
-              const userEmail = verifyData.session.user?.email
-              const redirectPath = isAdminEmail(userEmail)
-                ? getAdminRedirectPath()
-                : getDefaultRedirectPath()
-              
               setTimeout(() => {
-                router.push(redirectPath)
+                router.push('/chat')
               }, 2000)
             } else {
               setStatus('error')

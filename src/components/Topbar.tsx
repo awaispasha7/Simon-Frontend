@@ -2,14 +2,13 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Film, Settings, User, LogOut, ChevronDown, Plus, Shield } from 'lucide-react'
+import { Film, Settings, User, LogOut, ChevronDown, Plus } from 'lucide-react'
 import { ProfileSettings } from './ProfileSettings'
 import { ThemeSelector } from './ThemeSelector'
 import { useAuth } from '@/lib/auth-context'
 import { useProfile } from '@/lib/profile-context'
 import { useTheme, getThemeColors } from '@/lib/theme-context'
 import { useToastContext } from '@/components/ToastProvider'
-import { isAdminEmail } from '@/lib/admin-utils'
 
 export function Topbar() {
   const [showProfileSettings, setShowProfileSettings] = useState(false)
@@ -64,13 +63,6 @@ export function Topbar() {
     setShowProfileDropdown(false)
   }
 
-  const handleAdminClick = () => {
-    router.push('/admin')
-    setShowProfileDropdown(false)
-  }
-
-  // Check if user is admin
-  const isAdmin = isAuthenticated && user && isAdminEmail(user.email)
 
   // New Chat functionality for anonymous users
   const handleSignup = () => {
@@ -236,25 +228,6 @@ export function Topbar() {
                           <p className="text-xs opacity-70">Customize your experience</p>
                         </div>
                       </button>
-
-                      {/* Admin Panel - Only show for admin users */}
-                      {isAdmin && (
-                        <>
-                          <div className={`mx-4 my-2 h-px ${colors.border}`}></div>
-                          <button
-                            onClick={handleAdminClick}
-                            className={`w-full flex items-center gap-3 px-4 py-3 ${colors.textSecondary} hover:${colors.backgroundTertiary} transition-colors group`}
-                          >
-                            <div className={`p-1.5 rounded-lg ${colors.backgroundTertiary} group-hover:bg-orange-100 group-hover:text-orange-600 transition-colors`}>
-                              <Shield className="h-4 w-4" />
-                            </div>
-                            <div className="text-left">
-                              <p className="font-medium">Admin Panel</p>
-                              <p className="text-xs opacity-70">Manage validation queue</p>
-                            </div>
-                          </button>
-                        </>
-                      )}
 
                       <div className={`mx-4 my-2 h-px ${colors.border}`}></div>
 
