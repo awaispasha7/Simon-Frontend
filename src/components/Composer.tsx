@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 // import { Textarea } from '@/components/ui/textarea' // Removed - using custom styling
-import { Send, Loader2, Mic } from 'lucide-react'
+import { Send, Loader2, Mic, Globe } from 'lucide-react'
 import { UploadDropzone } from './UploadDropzone'
 import { AudioRecorder } from './AudioRecorder'
 import { SimpleAttachmentPreview } from './SimpleAttachmentPreview'
@@ -18,7 +18,7 @@ interface AttachedFile {
 }
 
 interface ComposerProps {
-  onSend: (message: string, attachedFiles?: AttachedFile[]) => void
+  onSend: (message: string, attachedFiles?: AttachedFile[], enableWebSearch?: boolean) => void
   disabled?: boolean
   sessionId?: string
   projectId?: string
@@ -34,6 +34,7 @@ export function Composer({ onSend, disabled = false, sessionId, projectId, editC
   const [isSmallScreen, setIsSmallScreen] = useState(false)
   const [isLargeScreen, setIsLargeScreen] = useState(false)
   const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([])
+  const [enableWebSearch, setEnableWebSearch] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const { resolvedTheme } = useTheme()
   const colors = getThemeColors(resolvedTheme)
@@ -84,7 +85,7 @@ export function Composer({ onSend, disabled = false, sessionId, projectId, editC
 
   const handleSend = () => {
     if ((!text.trim() && attachedFiles.length === 0) || disabled) return
-    onSend(text.trim(), attachedFiles.length > 0 ? attachedFiles : undefined)
+    onSend(text.trim(), attachedFiles.length > 0 ? attachedFiles : undefined, enableWebSearch)
     setText('')
     setAttachedFiles([])
     // Clear edit state when message is sent
@@ -109,7 +110,7 @@ export function Composer({ onSend, disabled = false, sessionId, projectId, editC
       console.log('🎤 [COMPOSER] Calling onSend with transcript - ensuring session context is maintained')
       // Add a small delay to ensure session state is stable
       setTimeout(() => {
-        onSend(transcript)
+        onSend(transcript, undefined, enableWebSearch)
         setText('') // Clear the text area after sending
       }, 100)
     }
@@ -142,7 +143,52 @@ export function Composer({ onSend, disabled = false, sessionId, projectId, editC
       )}
       
       <div className={`relative flex items-center backdrop-blur-sm rounded-t-none rounded-b-2xl p-1.5 sm:p-2 md:p-3 border ${colors.glassBorder} shadow-lg overflow-visible`} style={{ backgroundColor: resolvedTheme === 'light' ? 'rgba(255, 255, 255, 0.8)' : 'rgb(83, 93, 108)' }}>
-        <UploadDropzone sessionId={sessionId} projectId={projectId} onFileAttached={handleFileAttached} />
+          <UploadDropzone sessionId={sessionId} projectId={projectId} onFileAttached={handleFileAttached} />
+          
+          {/* Globe icon toggle for web search */}
+          <button
+            type="button"
+            onClick={() => setEnableWebSearch(!enableWebSearch)}
+            disabled={disabled}
+            className={cn(
+              "h-10 w-10 sm:h-[56px] sm:w-[56px] hover:scale-105 active:scale-95 transition-all duration-200 rounded-lg sm:rounded-xl border-2 shadow-sm hover:shadow-md flex items-center justify-center backdrop-blur-sm shrink-0",
+              enableWebSearch
+                ? resolvedTheme === 'light'
+                  ? "border-blue-500 bg-blue-50 hover:bg-blue-100"
+                  : "border-sky-400 bg-sky-900/30 hover:bg-sky-900/50"
+                : resolvedTheme === 'light'
+                  ? "border-gray-300 bg-white hover:border-gray-400 hover:bg-gray-50"
+                  : "border-slate-600 bg-slate-800 hover:border-slate-500 hover:bg-slate-700",
+              disabled && "opacity-50 cursor-not-allowed"
+            )}
+            style={{
+              backgroundColor: enableWebSearch
+                ? resolvedTheme === 'light' ? '#eff6ff' : 'rgba(14, 165, 233, 0.2)'
+                : resolvedTheme === 'light' ? 'white' : 'rgb(83, 93, 108)',
+              borderColor: enableWebSearch
+                ? resolvedTheme === 'light' ? '#3b82f6' : '#0ea5e9'
+                : resolvedTheme === 'light' ? '#d1d5db' : '#475569',
+              width: isLargeScreen ? '56px' : '40px',
+              height: isLargeScreen ? '56px' : '40px',
+              minWidth: isLargeScreen ? '56px' : '40px',
+              minHeight: isLargeScreen ? '56px' : '40px',
+              transition: 'all 0.2s ease'
+            }}
+            title={enableWebSearch ? "Web search enabled - Click to disable" : "Web search disabled - Click to enable"}
+          >
+            <Globe 
+              className="h-4 w-4 sm:h-5 sm:w-5 transition-colors"
+              style={{
+                color: enableWebSearch
+                  ? resolvedTheme === 'light' ? '#3b82f6' : '#0ea5e9'
+                  : resolvedTheme === 'light' ? '#6b7280' : '#94a3b8',
+                strokeWidth: enableWebSearch ? 2.5 : 2
+              }}
+            />
+          </button>
+          
+          <div className="w-1"></div>
+          
           <div className="relative">
             {!showAudioRecorder ? (
               // Initial state - just the mic button

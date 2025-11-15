@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(req: NextRequest) {
   try {
-    const { text, session_id, project_id, attached_files, edit_from_message_id } = await req.json()
+    const { text, session_id, project_id, attached_files, edit_from_message_id, enable_web_search } = await req.json()
     
     // Get headers from the request
     const xSessionId = req.headers.get('X-Session-ID')
@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
           ...(xSessionId && { 'X-Session-ID': xSessionId }),
           ...(xProjectId && { 'X-Project-ID': xProjectId }),
         },
-        body: JSON.stringify({ text, session_id, project_id: xProjectId || project_id, attached_files, edit_from_message_id }),
+        body: JSON.stringify({ text, session_id, project_id: xProjectId || project_id, attached_files, edit_from_message_id, enable_web_search: enable_web_search || false }),
         signal: controller.signal,
       })
       

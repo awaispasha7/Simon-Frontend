@@ -555,7 +555,7 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProje
     scrollToBottom()
   }, [messages])
 
-  const handleSendMessage = async (text: string, attachedFiles?: AttachedFile[]) => {
+  const handleSendMessage = async (text: string, attachedFiles?: AttachedFile[], enableWebSearch?: boolean) => {
     if (!text.trim() || isLoading) {
       return
     }
@@ -741,7 +741,8 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProje
           session_id: sessionId,
           project_id: projectId,
           attached_files: attachedFiles || [],
-          edit_from_message_id: (isEditing && editMessageId) ? editMessageId : undefined
+          edit_from_message_id: (isEditing && editMessageId) ? editMessageId : undefined,
+          enable_web_search: enableWebSearch || false
         }),
         signal: controller.signal,
       })
