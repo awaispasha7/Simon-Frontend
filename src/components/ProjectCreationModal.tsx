@@ -187,7 +187,7 @@ export function ProjectCreationModal({
               color: resolvedTheme === 'dark' ? 'rgb(255, 255, 255)' : 'rgb(17, 24, 39)'
             }}
           >
-            {isRequired ? 'Create Your First Story' : 'Create New Story'}
+            {isRequired ? 'Create Your First Project' : 'Create New Project'}
           </h2>
           <p 
             className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed"
@@ -199,8 +199,8 @@ export function ProjectCreationModal({
             }}
           >
             {isRequired 
-              ? 'Every story needs a project. Give your story a name to get started!'
-              : 'Create a new project to organize your story sessions. You can have multiple conversations within each project.'}
+              ? 'Every project needs a name. Give your project a name to get started!'
+              : 'Create a new project to organize your content sessions. You can have multiple conversations within each project.'}
           </p>
         </div>
 
@@ -218,7 +218,7 @@ export function ProjectCreationModal({
                 fontWeight: '500'
               }}
             >
-              Story Name <span style={{ color: 'rgb(239, 68, 68)' }}>*</span>
+              Project Name <span style={{ color: 'rgb(239, 68, 68)' }}>*</span>
             </label>
             <input
               id="project-name"
@@ -228,7 +228,7 @@ export function ProjectCreationModal({
                 setProjectName(e.target.value)
                 setError(null)
               }}
-              placeholder="e.g., Romantic Novel, Horror Story..."
+              placeholder="e.g., Fitness Content, Cooking Series, Tech Tips..."
               required
               disabled={isCreating}
               className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -279,7 +279,7 @@ export function ProjectCreationModal({
               id="project-description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Brief description of your story..."
+              placeholder="Brief description of your project..."
               rows={3}
               disabled={isCreating}
               className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
@@ -389,7 +389,7 @@ export function ProjectCreationModal({
                 e.currentTarget.style.boxShadow = 'none'
               }}
             >
-              {isCreating ? 'Creating...' : 'Create Story'}
+              {isCreating ? 'Creating...' : 'Create Project'}
             </button>
           </div>
         </form>

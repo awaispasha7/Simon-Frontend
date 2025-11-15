@@ -111,11 +111,11 @@ export function Topbar() {
             </div>
             <div className="flex items-center gap-2 sm:gap-4">
               <div>
-                <h1 className={`font-bold text-sm sm:text-lg ${colors.text}`}>Stories We Tell</h1>
-                <p className={`text-xs ${colors.textTertiary} font-medium hidden sm:block`}>AI Story Development</p>
+                <h1 className={`font-bold text-sm sm:text-lg ${colors.text}`}>Content Creator AI</h1>
+                <p className={`text-xs ${colors.textTertiary} font-medium hidden sm:block`}>Short-Form Video Assistant</p>
               </div>
               <div className={`hidden lg:flex items-center gap-2 text-sm ${colors.textSecondary} ${colors.backgroundTertiary} px-3 py-1.5 rounded-full border ${colors.border}`}>
-                <span className="font-medium">Cinematic intake assistant</span>
+                <span className="font-medium">Content Creator</span>
               </div>
             </div>
           </div>

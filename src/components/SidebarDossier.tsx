@@ -204,7 +204,7 @@ export function SidebarDossier({ sessionId, projectId, onClose }: SidebarDossier
         <div className="text-center py-8">
           <h3 className="text-gray-600 dark:text-gray-400 font-medium mb-2">No Active Session</h3>
           <p className="text-gray-500 dark:text-gray-500 text-sm">
-            Start a conversation to see your story dossier
+            Start a conversation to see your content dossier
           </p>
         </div>
       </div>
@@ -231,7 +231,7 @@ export function SidebarDossier({ sessionId, projectId, onClose }: SidebarDossier
         <div className="text-center py-8">
           <h3 className="text-gray-600 dark:text-gray-400 font-medium mb-2">No Dossier Yet</h3>
           <p className="text-gray-500 dark:text-gray-500 text-sm">
-            Your story dossier will appear here as you develop your story
+            Your content dossier will appear here as you create content
           </p>
         </div>
       </div>
@@ -256,9 +256,9 @@ export function SidebarDossier({ sessionId, projectId, onClose }: SidebarDossier
       {/* Header */}
       <div className={`text-center pb-4 border-b-2 ${resolvedTheme === 'light' ? 'border-red-300' : 'border-red-600'}`}>
         <h2 className="text-xl font-bold bg-linear-to-r from-red-500 to-blue-500 bg-clip-text text-transparent">
-          Story Dossier
+          Content Dossier
         </h2>
-        <p className={`text-sm ${colors.textSecondary} mt-1`}>Your story development hub</p>
+        <p className={`text-sm ${colors.textSecondary} mt-1`}>Your content creation hub</p>
       </div>
 
       {/* Project Information */}
@@ -283,7 +283,7 @@ export function SidebarDossier({ sessionId, projectId, onClose }: SidebarDossier
         <div className="pb-3">
             <h3 className={`text-lg flex items-center gap-2 font-semibold ${colors.text}`}>
               <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-              Story Overview
+              Content Overview
             </h3>
         </div>
         <div className={`${colors.cardBackground} border-2 ${colors.borderSecondary} shadow-lg mt-8 sm:mt-12 lg:mt-16 rounded-lg`} style={{ padding: '0.75rem' }}>
@@ -291,13 +291,13 @@ export function SidebarDossier({ sessionId, projectId, onClose }: SidebarDossier
             <div className="flex justify-between items-center">
               <div className={`text-xs font-semibold ${resolvedTheme === 'light' ? 'text-red-600' : 'text-red-400'} uppercase tracking-wide`}>Title</div>
               <div className="font-bold bg-linear-to-r from-red-500 to-blue-500 bg-clip-text text-transparent text-sm">
-                {d.title || 'Untitled Story'}
+                {d.title || 'Untitled Project'}
               </div>
             </div>
             <div className="flex justify-between items-center">
               <div className={`text-xs font-semibold ${resolvedTheme === 'light' ? 'text-red-600' : 'text-red-400'} uppercase tracking-wide`}>Logline</div>
               <div className={`text-sm leading-relaxed max-w-[70%] ${colors.textSecondary}`}>
-                {d.logline || 'A compelling story waiting to be told...'}
+                {d.logline || 'Content ready to be created...'}
               </div>
             </div>
             <div className="flex gap-2 flex-wrap">

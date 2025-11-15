@@ -208,7 +208,7 @@ export function Composer({ onSend, disabled = false, sessionId, projectId, editC
             onChange={e => setText(e.target.value)}
             onKeyDown={handleKeyDown}
             onClick={() => textareaRef.current?.focus()}
-            placeholder={isSmallScreen ? "Take me to the mo…" : "Take me to the moment your story begins…"}
+            placeholder={isSmallScreen ? "What content…" : "What content are you creating today? 🎬"}
             className={cn(
               `composer-textarea flex-1 min-w-0 resize-none border-0 ${colors.inputBackground} backdrop-blur-sm focus:${colors.inputBackground} rounded-lg sm:rounded-xl transition-all duration-200 text-xs sm:text-sm md:text-base ${colors.text} px-2 sm:px-3 py-2 sm:py-3`,
               resolvedTheme === 'light' 

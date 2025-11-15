@@ -72,7 +72,7 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProje
       setMessages([
         {
           role: 'assistant',
-          content: "Hi! I'm here to help bring your story to life. What story idea has been on your mind?"
+          content: "Hey! 👋 I'm your content creation assistant! Let's create some killer short-form videos for Instagram and TikTok. What topic are you passionate about sharing today?"
         }
       ])
     } else {
@@ -89,7 +89,7 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProje
           setMessages([
             {
               role: 'assistant',
-              content: "Hi! I'm here to help bring your story to life. What story idea has been on your mind?"
+              content: "Hey! 👋 I'm your content creation assistant! Let's create some killer short-form videos for Instagram and TikTok. What topic are you passionate about sharing today?"
             }
           ])
         },
@@ -144,9 +144,9 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProje
     
     // Check for AI responses that mention signup/login
     const signupKeywords = [
-      'sign up', 'signup', 'create account', 'register', 'unlimited stories',
-      'multiple stories', 'save your story', 'access your stories',
-      'create unlimited stories', 'sign up to create', 'register to access'
+      'sign up', 'signup', 'create account', 'register', 'unlimited content',
+      'multiple content', 'save your content', 'access your content',
+      'create unlimited content', 'sign up to create', 'register to access'
     ]
     
     const contentLower = content.toLowerCase()
@@ -156,7 +156,7 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProje
   const [messages, setMessages] = useState<BubbleProps[]>([
     {
       role: 'assistant',
-      content: "Hi! I'm here to help bring your story to life. What story idea has been on your mind?"
+      content: "Hey! 👋 I'm your content creation assistant! Let's create some killer short-form videos for Instagram and TikTok. What topic are you passionate about sharing today?"
     }
   ])
   const [isLoading, setIsLoading] = useState(false)
@@ -351,7 +351,7 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProje
         setMessages([
           {
             role: 'assistant',
-            content: "Hi! I'm here to help bring your story to life. What story idea has been on your mind?"
+            content: "Hey! 👋 I'm your content creation assistant! Let's create some killer short-form videos for Instagram and TikTok. What topic are you passionate about sharing today?"
           }
         ])
         // Reset local session tracking for new chat  
@@ -437,7 +437,7 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProje
             setMessages([
               {
                 role: 'assistant',
-                content: "Hi! I'm here to help bring your story to life. What story idea has been on your mind?"
+                content: "Hey! 👋 I'm your content creation assistant! Let's create some killer short-form videos for Instagram and TikTok. What topic are you passionate about sharing today?"
               }
             ])
           }
@@ -447,7 +447,7 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProje
           setMessages([
             {
               role: 'assistant',
-              content: "Hi! I'm here to help bring your story to life. What story idea has been on your mind?"
+              content: "Hey! 👋 I'm your content creation assistant! Let's create some killer short-form videos for Instagram and TikTok. What topic are you passionate about sharing today?"
             }
           ])
         }
@@ -477,7 +477,7 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProje
             setMessages([
               {
                 role: 'assistant',
-                content: "Hi! I'm here to help bring your story to life. What story idea has been on your mind?"
+                content: "Hey! 👋 I'm your content creation assistant! Let's create some killer short-form videos for Instagram and TikTok. What topic are you passionate about sharing today?"
               }
             ])
             setCurrentSessionId('')
@@ -507,19 +507,18 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProje
   const getDynamicTypingMessage = (userMessage: string) => {
     const message = userMessage.toLowerCase()
     
-    // Story development keywords
-    const storyKeywords = [
-      'character', 'plot', 'scene', 'setting', 'theme', 'conflict', 'resolution',
-      'protagonist', 'antagonist', 'dialogue', 'script', 'story', 'narrative',
-      'beginning', 'middle', 'end', 'climax', 'tension', 'drama', 'comedy',
-      'thriller', 'romance', 'action', 'adventure', 'mystery', 'horror'
+    // Fitness content keywords
+    const fitnessKeywords = [
+      'workout', 'exercise', 'fitness', 'nutrition', 'motivation', 'transformation', 'gym', 'training', 'content', 'video',
+      'instagram', 'tiktok', 'reels', 'shorts', 'fitness influencer', 'workout routine', 'meal prep', 'protein', 'cardio',
+      'strength training', 'weight loss', 'muscle gain', 'fitness tips', 'health', 'wellness', 'diet', 'supplements'
     ]
     
-    // Check if user is talking about story development
-    const isStoryDevelopment = storyKeywords.some(keyword => message.includes(keyword))
+    // Check if user is talking about fitness content
+    const isFitnessContent = fitnessKeywords.some(keyword => message.includes(keyword))
     
-    if (isStoryDevelopment) {
-      return "Crafting your story..."
+    if (isFitnessContent) {
+      return "Creating your fitness content..."
     }
     
     // Use a deterministic approach based on message content to avoid hydration issues
@@ -566,9 +565,9 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProje
     console.log('💬 [CHAT] _sessionId prop:', _sessionId, '_projectId prop:', _projectId)
     console.log('💬 [CHAT] currentSessionId state:', currentSessionId, 'currentProjectId state:', currentProjectId)
     
-    // Check if story is completed - show helpful prompt instead of sending message
+    // Check if content is completed - show helpful prompt instead of sending message
     if (storyCompleted) {
-      console.log('📖 [CHAT] Story completed - showing prompt instead of sending message')
+      console.log('📖 [CHAT] Content completed - showing prompt instead of sending message')
       
       // Add user message to UI
       const userMessage: BubbleProps = { 
@@ -582,8 +581,8 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProje
       const promptMessage: BubbleProps = {
         role: 'assistant',
         content: isAuthenticated 
-          ? "Your story is complete! 🎉 To start a new story, please click the \"New Project\" button in the sidebar."
-          : "Your story is complete! 🎉 To create more stories and save your progress, please sign up or log in. It's free and takes just a moment!"
+          ? "Your content is ready! 🎉 To create new content, please click the \"New Project\" button in the sidebar."
+          : "Your content is ready! 🎉 To create unlimited content ideas and save your progress, please sign up or log in. It's free and takes just a moment!"
       }
       
       setTimeout(() => {
@@ -862,14 +861,16 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProje
       // Detect completion heuristics (match backend markers)
       const lower = assistantContent.toLowerCase()
       const completed = [
-        'the story is complete',
-        'your story is complete',
-        'story is complete',
+        'this is perfect',
+        'i\'m ready',
+        'let\'s go with this',
+        'this is good',
+        'content is ready',
         "we've reached the end",
-        'the end of the story',
-        'conclusion of the story',
-        'would you like to create another story',
-        'would you like to start another story'
+        'the end',
+        'conclusion',
+        'would you like to create another',
+        'would you like to start another'
       ].some(k => lower.includes(k))
 
       if (completed) {
@@ -961,12 +962,12 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProje
               <div className="w-16 h-16 bg-linear-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center mb-6 shadow-lg">
                 <span className="text-2xl">🎬</span>
               </div>
-              <h2 className="text-2xl font-bold text-gray-800 mb-3">Welcome to Chat</h2>
+              <h2 className="text-2xl font-bold text-gray-800 mb-3">Let's Create Viral Content! 🎬</h2>
               <p className="text-gray-600 max-w-md leading-relaxed">
-                Start a conversation to get started.
+                I'll help you create engaging short-form videos for Instagram Reels and TikTok. What content are you thinking about?
               </p>
               <div className="mt-6 text-sm text-gray-500">
-                Start a conversation to get started
+                Share your content idea to get started
               </div>
             </div>
           )}
@@ -985,7 +986,7 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProje
                   <span className="text-sm font-semibold text-amber-700">Session Expired</span>
                 </div>
                 <p className="text-sm text-amber-800 mb-3">
-                  Your anonymous session has expired. Sign in to save your chats and continue your story development.
+                  Your anonymous session has expired. Sign in to save your content ideas and continue creating.
                 </p>
                 <div className="flex gap-2">
                   <button

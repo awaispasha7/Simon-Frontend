@@ -7,7 +7,7 @@ interface LoginPromptModalProps {
   onClose: () => void
   onSignup: () => void
   onLogin: () => void
-  trigger?: 'new-story' | 'session-start' | 'story-complete'
+  trigger?: 'new-content' | 'session-start' | 'content-complete'
 }
 
 export function LoginPromptModal({ 
@@ -21,10 +21,10 @@ export function LoginPromptModal({
 
   const getTitle = () => {
     switch (trigger) {
-      case 'new-story':
-        return 'Create Unlimited Stories'
-      case 'story-complete':
-        return 'Ready for Your Next Story?'
+      case 'new-content':
+        return 'Create Unlimited Content'
+      case 'content-complete':
+        return 'Ready for Your Next Content?'
       default:
         return 'Unlock Your Creative Potential'
     }
@@ -32,12 +32,12 @@ export function LoginPromptModal({
 
   const getDescription = () => {
     switch (trigger) {
-      case 'new-story':
-        return 'Sign up to create multiple stories and access advanced features like story management, character development, and script generation.'
-      case 'story-complete':
-        return 'Great job completing your story! Sign up to create unlimited stories and never lose your creative work.'
+      case 'new-content':
+        return 'Sign up to create multiple content pieces and access advanced features like content management, script generation, and analytics.'
+      case 'content-complete':
+        return 'Great job completing your content! Sign up to create unlimited content and never lose your work.'
       default:
-        return 'Sign up to create unlimited stories, save your progress, and access advanced story development features.'
+        return 'Sign up to create unlimited content, save your progress, and access advanced content creation features.'
     }
   }
 
@@ -198,7 +198,7 @@ export function LoginPromptModal({
                   flexShrink: '0'
                 }}
               ></div>
-              Create unlimited stories
+              Create unlimited content
             </div>
             <div 
               className="flex items-center text-sm text-gray-700 dark:text-gray-300"
@@ -221,7 +221,7 @@ export function LoginPromptModal({
                   flexShrink: '0'
                 }}
               ></div>
-              Save and manage your stories
+              Save and manage your content
             </div>
             <div 
               className="flex items-center text-sm text-gray-700 dark:text-gray-300"

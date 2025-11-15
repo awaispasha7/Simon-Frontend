@@ -26,7 +26,7 @@ export default function ChatPage() {
   const [currentProjectId, setCurrentProjectId] = useState<string>('')
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
   const [showLoginModal, setShowLoginModal] = useState(false)
-  const [loginModalTrigger, setLoginModalTrigger] = useState<'new-story' | 'session-start' | 'story-complete'>('session-start')
+  const [loginModalTrigger, setLoginModalTrigger] = useState<'new-content' | 'session-start' | 'content-complete'>('session-start')
   const [showSidebarHint, setShowSidebarHint] = useState(false)
   const [showProjectModal, setShowProjectModal] = useState(false)
   const [projectModalRequired, setProjectModalRequired] = useState(false)
@@ -283,7 +283,7 @@ export default function ChatPage() {
 
   const handleNewStoryClick = async () => {
     if (!isAuthenticated) {
-      setLoginModalTrigger('new-story')
+      setLoginModalTrigger('new-content')
       setShowLoginModal(true)
     } else {
       // For authenticated users, check if they have projects
@@ -529,7 +529,7 @@ export default function ChatPage() {
                     Discover More!
                   </h3>
                   <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed mb-3">
-                    Tap the colorful button to access your story dossier and previous chats.
+                    Tap the colorful button to access your content dossier and previous chats.
                   </p>
                   <div className="flex gap-2">
                     <button

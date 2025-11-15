@@ -40,17 +40,17 @@ export function CompletionModal({ open, title, onClose, onNewStory, onViewDossie
           >
             SW
           </div>
-          <h3 className="text-lg! font-semibold! text-gray-900! dark:text-gray-100!">Story Completed</h3>
+          <h3 className="text-lg! font-semibold! text-gray-900! dark:text-gray-100!">Content Ready</h3>
         </div>
         <p className="text-sm! leading-6! text-gray-600! dark:text-gray-300! mb-4!">
-          {title ? `“${title}” has been captured.` : 'Your story has been captured.'} A confirmation email will be sent if email is configured.
+          {title ? `"${title}" has been captured.` : 'Your content has been captured.'} A confirmation email will be sent if email is configured.
         </p>
         <div className="flex! items-center! gap-3! mt-4!">
           <button
             onClick={onNewStory}
             className="px-4! py-2! rounded-lg! text-white! bg-blue-600! hover:bg-blue-700! shadow-md! hover:shadow-lg! transition-all! cursor-pointer!"
           >
-            Start New Story
+            Create New Content
           </button>
           {onViewDossier && (
             <button

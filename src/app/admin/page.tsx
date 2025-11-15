@@ -59,7 +59,7 @@ export default function AdminPage() {
           <div className="flex! justify-between! items-center! py-8!">
             <div>
               <h1 className={`text-3xl! font-bold! ${colors.text} mb-2!`}>Admin Dashboard</h1>
-              <p className={`${colors.textSecondary} text-sm!`}>Story Validation Management</p>
+              <p className={`${colors.textSecondary} text-sm!`}>Content Validation Management</p>
             </div>
             <div className="flex! items-center! gap-6!">
               <span className={`text-sm! ${colors.textSecondary} font-medium! whitespace-nowrap!`}>

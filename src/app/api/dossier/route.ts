@@ -40,8 +40,8 @@ export async function GET() {
       
       // Return default data on error
       return NextResponse.json({
-        title: 'Untitled Story',
-        logline: 'A compelling story waiting to be told...',
+        title: 'Untitled Project',
+        logline: 'Content ready to be created...',
         genre: 'Unknown',
         tone: 'Unknown',
         scenes: [],

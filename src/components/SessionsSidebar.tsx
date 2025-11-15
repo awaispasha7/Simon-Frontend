@@ -411,7 +411,7 @@ export function SessionsSidebar({
   const handleDeleteSession = async (sessionId: string) => {
     toast.confirm(
       'Attention!',
-      'You are about to PERMANENTLY DELETE this chat session!\n\nThis action CANNOT be undone!\nAll messages and story progress will be lost forever!\n\nAre you absolutely sure you want to proceed?',
+      'You are about to PERMANENTLY DELETE this chat session!\n\nThis action CANNOT be undone!\nAll messages and content will be lost forever!\n\nAre you absolutely sure you want to proceed?',
       async () => {
         try {
           await deleteSessionMutation.mutateAsync(sessionId)
@@ -447,7 +447,7 @@ export function SessionsSidebar({
   const handleDeleteProject = async (projectId: string, projectName: string) => {
     toast.confirm(
       '⚠️ DANGER ZONE ⚠️',
-      `You are about to PERMANENTLY DELETE the project "${projectName}"!\n\nThis action CANNOT be undone!\nAll chat sessions and story progress in this project will be lost forever!\n\nAre you absolutely sure you want to proceed?`,
+      `You are about to PERMANENTLY DELETE the project "${projectName}"!\n\nThis action CANNOT be undone!\nAll chat sessions and content in this project will be lost forever!\n\nAre you absolutely sure you want to proceed?`,
       async () => {
         try {
           await deleteProjectMutation.mutateAsync(projectId)
@@ -480,7 +480,7 @@ export function SessionsSidebar({
 
     toast.confirm(
       '⚠️ EXTREME DANGER ZONE ⚠️',
-      `You are about to PERMANENTLY DELETE ALL ${projectCount} PROJECTS!\n\nThis will also delete ALL ${sessionCount} CHAT SESSIONS!\n\nThis action CANNOT be undone!\nAll messages and story progress will be lost forever!\n\nAre you absolutely sure you want to proceed?`,
+      `You are about to PERMANENTLY DELETE ALL ${projectCount} PROJECTS!\n\nThis will also delete ALL ${sessionCount} CHAT SESSIONS!\n\nThis action CANNOT be undone!\nAll messages and content will be lost forever!\n\nAre you absolutely sure you want to proceed?`,
       async () => {
         try {
           const result = await deleteAllProjectsMutation.mutateAsync()
@@ -557,7 +557,7 @@ export function SessionsSidebar({
               <div className="text-center py-8">
                 <h3 className={`text-lg font-medium ${colors.text} mb-2`}>No previous chats found</h3>
                 <p className={`${colors.textSecondary} text-sm mb-4`}>
-                  Continue to build your story development history
+                  Continue to build your content creation history
                 </p>
               </div>
             </div>
@@ -623,7 +623,7 @@ export function SessionsSidebar({
               <>
                 <h3 className={`text-lg font-medium ${colors.text} mb-2`}>No projects yet</h3>
                 <p className={`${colors.textSecondary} text-sm mb-4`}>
-                  Create a project to get started with your story.
+                  Create a project to get started with your content.
                 </p>
               </>
             ) : (
