@@ -90,7 +90,7 @@ export function Topbar() {
       () => {
         console.log('🆕 [TOPBAR] User confirmed new chat - clearing session')
         // User confirmed - clear current session and reload page
-        localStorage.removeItem('chat_session')
+        localStorage.removeItem('stories_we_tell_session')
         window.location.reload()
       },
       undefined, // No cancel action needed
@@ -111,11 +111,11 @@ export function Topbar() {
             </div>
             <div className="flex items-center gap-2 sm:gap-4">
               <div>
-                <h1 className={`font-bold text-sm sm:text-lg ${colors.text}`}>Chat</h1>
-                <p className={`text-xs ${colors.textTertiary} font-medium hidden sm:block`}>AI Assistant</p>
+                <h1 className={`font-bold text-sm sm:text-lg ${colors.text}`}>Stories We Tell</h1>
+                <p className={`text-xs ${colors.textTertiary} font-medium hidden sm:block`}>AI Story Development</p>
               </div>
               <div className={`hidden lg:flex items-center gap-2 text-sm ${colors.textSecondary} ${colors.backgroundTertiary} px-3 py-1.5 rounded-full border ${colors.border}`}>
-                <span className="font-medium">AI Assistant</span>
+                <span className="font-medium">Cinematic intake assistant</span>
               </div>
             </div>
           </div>
