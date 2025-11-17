@@ -32,19 +32,18 @@ export function GlobalLoader() {
   if (!show) return null
 
   return (
-    <div className="fixed inset-0 z-2000 flex items-center justify-center bg-white/80 dark:bg-black/70 backdrop-blur-sm animate-in fade-in duration-300">
-      <div className="flex flex-col items-center gap-3">
-        <div className="relative w-16 h-16 rounded-full flex items-center justify-center shadow-lg overflow-hidden bg-white animate-bounce-slow">
-          <div className="absolute inset-0 rounded-full border-2 border-red-500/30 animate-spin-slow"></div>
+    <div className="fixed inset-0 z-2000 flex items-center justify-center bg-white dark:bg-gray-900">
+      <div className="flex flex-col items-center gap-4">
+        <div className="relative w-20 h-20 rounded-full flex items-center justify-center shadow-md overflow-hidden bg-white">
           <Image
             src="/agent-logo.svg"
             alt="Simon's Chatbot"
-            width={64}
-            height={64}
-            className="w-full h-full object-contain animate-pulse-slow"
+            width={80}
+            height={80}
+            className="w-full h-full object-contain"
           />
         </div>
-        <p className="text-gray-600 dark:text-gray-300 font-medium animate-pulse">Simon's Chatbot</p>
+        <p className="text-gray-700 dark:text-gray-300 font-medium text-lg">Simon's Chatbot</p>
       </div>
     </div>
   )

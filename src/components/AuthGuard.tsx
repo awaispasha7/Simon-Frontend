@@ -22,19 +22,18 @@ export function AuthGuard({ children, redirectTo = '/auth/login' }: AuthGuardPro
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 via-white to-orange-50 animate-in fade-in duration-500">
+      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900">
         <div className="text-center">
-          <div className="relative w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 overflow-hidden bg-white shadow-lg animate-bounce-slow">
-            <div className="absolute inset-0 rounded-full border-2 border-red-500/30 animate-spin-slow"></div>
+          <div className="relative w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 overflow-hidden bg-white shadow-md">
             <Image
               src="/agent-logo.svg"
               alt="Simon's Chatbot"
-              width={64}
-              height={64}
-              className="w-full h-full object-contain animate-pulse-slow"
+              width={80}
+              height={80}
+              className="w-full h-full object-contain"
             />
           </div>
-          <p className="text-gray-600 font-medium animate-pulse">Simon's Chatbot</p>
+          <p className="text-gray-700 dark:text-gray-300 font-medium text-lg">Simon's Chatbot</p>
         </div>
       </div>
     )
