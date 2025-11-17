@@ -12,6 +12,7 @@ import { MessageSquare } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
 import { sessionApi } from '@/lib/api'
+import { supabase } from '@/lib/supabase'
 
 export default function ChatPage() {
   const init = useChatStore(s => s.init)
@@ -74,11 +75,42 @@ export default function ChatPage() {
   }, [])
 
 
-  // Redirect to login if not authenticated
+  // Redirect to login if not authenticated (but wait for auth to fully load)
   useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      router.push('/auth/login')
+    // Don't redirect while auth is still loading
+    if (authLoading) {
+      return
     }
+    
+    // Only redirect if we're definitely not authenticated
+    // Add a delay to ensure Supabase session check has completed
+    // This prevents race conditions on page refresh where authLoading becomes false
+    // before isAuthenticated is set to true
+    const timeoutId = setTimeout(async () => {
+      // Re-check auth state - if user became authenticated during the delay, don't redirect
+      if (isAuthenticated) {
+        console.log('✅ [PAGE] User authenticated, staying on chat page')
+        return
+      }
+      
+      // Double-check Supabase session directly before redirecting
+      // This handles cases where auth context hasn't updated yet but session exists
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession()
+        if (session?.user) {
+          console.log('✅ [PAGE] Found Supabase session, staying on chat page (auth context may be delayed)')
+          return
+        }
+      } catch (error) {
+        console.error('Error checking Supabase session:', error)
+      }
+      
+      // Only redirect if truly no session exists
+      console.log('🔒 [PAGE] No authentication found, redirecting to login')
+      router.push('/auth/login')
+    }, 1500) // Increased delay to give more time for auth initialization
+    
+    return () => clearTimeout(timeoutId)
   }, [authLoading, isAuthenticated, router])
 
   // Show sidebar hint for new users on mobile
@@ -96,23 +128,69 @@ export default function ChatPage() {
     }
   }, [isSidebarCollapsed])
 
-  // Initialize session sync and restore session
-  // Only run once on mount - don't restore if we already have values
+  // Initialize session sync and restore most recent session after authentication
   useEffect(() => {
     const initializeSession = async () => {
+      // Wait for authentication to complete before restoring session
+      if (authLoading || !isAuthenticated) {
+        return
+      }
+
       try {
-        // Only restore from localStorage if we don't already have session set
+        // Don't restore if currentSessionId is explicitly '' (user wants new chat)
+        if (currentSessionId === '') {
+          console.log('🆕 [PAGE] New chat requested, skipping session restoration')
+          return
+        }
+        
+        // First, try to restore from localStorage
         if (!currentSessionId) {
           const stored = localStorage.getItem('chat_session')
           if (stored) {
-            const parsed = JSON.parse(stored)
-            if (parsed.sessionId) {
-              console.log('🔄 [PAGE] Restoring session from localStorage:', parsed.sessionId)
-              setCurrentSessionId(parsed.sessionId)
+            try {
+              const parsed = JSON.parse(stored)
+              if (parsed.sessionId) {
+                console.log('🔄 [PAGE] Restoring session from localStorage:', parsed.sessionId)
+                setCurrentSessionId(parsed.sessionId)
+                return // Found session in localStorage, use it
+              }
+            } catch (e) {
+              console.error('Error parsing stored session:', e)
             }
           }
-        } else {
-          console.log('🔄 [PAGE] Skipping localStorage restore - already have session:', currentSessionId)
+          
+          // If no session in localStorage, fetch the most recent session from backend
+          console.log('🔄 [PAGE] No session in localStorage, fetching most recent session...')
+          try {
+            const sessionsResponse = await sessionApi.getSessions(1) // Get the most recent session
+            const sessions = Array.isArray(sessionsResponse) 
+              ? sessionsResponse 
+              : (sessionsResponse && typeof sessionsResponse === 'object' && 'sessions' in sessionsResponse)
+                ? (sessionsResponse as { sessions: unknown[] }).sessions
+                : []
+            
+            if (sessions.length > 0 && sessions[0]?.session_id) {
+              const lastSessionId = sessions[0].session_id
+              console.log('🔄 [PAGE] Found most recent session:', lastSessionId)
+              setCurrentSessionId(lastSessionId)
+              
+              // Update localStorage
+              try {
+                localStorage.setItem('chat_session', JSON.stringify({
+                  sessionId: lastSessionId,
+                  userId: user?.user_id,
+                  isAuthenticated: true
+                }))
+              } catch (e) {
+                console.error('Failed to save session to localStorage:', e)
+              }
+            } else {
+              console.log('📝 [PAGE] No previous sessions found. Will create session on first message.')
+            }
+          } catch (error) {
+            console.error('Failed to fetch most recent session:', error)
+            // Don't create a session here - wait for user to send first message
+          }
         }
         
         // Then initialize the session sync manager asynchronously
@@ -123,9 +201,9 @@ export default function ChatPage() {
     }
 
     initializeSession()
-  }, []) // Only run once on mount
+  }, [authLoading, isAuthenticated, user, currentSessionId]) // Run when auth state changes
 
-  // Listen for session cleared and updated events
+  // Listen for session cleared, updated, and deleted events
   useEffect(() => {
     const handleSessionCleared = (event: CustomEvent) => {
       console.log('🔄 Session cleared event received:', event.detail.reason)
@@ -142,12 +220,31 @@ export default function ChatPage() {
       }
     }
 
+    const handleSessionDeleted = (event: CustomEvent) => {
+      console.log('🗑️ Session deleted event received:', event.detail)
+      const { sessionId: deletedSessionId } = event.detail || {}
+      
+      // If the deleted session is the current one, clear it
+      if (deletedSessionId && deletedSessionId === currentSessionId) {
+        console.log('🗑️ Current session was deleted - clearing chat')
+        setCurrentSessionId('')
+        // Clear localStorage
+        try {
+          localStorage.removeItem('chat_session')
+        } catch (e) {
+          console.error('Failed to clear localStorage:', e)
+        }
+      }
+    }
+
     window.addEventListener('sessionCleared', handleSessionCleared as EventListener)
     window.addEventListener('sessionUpdated', handleSessionUpdated as EventListener)
+    window.addEventListener('sessionDeleted', handleSessionDeleted as EventListener)
     
     return () => {
       window.removeEventListener('sessionCleared', handleSessionCleared as EventListener)
       window.removeEventListener('sessionUpdated', handleSessionUpdated as EventListener)
+      window.removeEventListener('sessionDeleted', handleSessionDeleted as EventListener)
     }
   }, [currentSessionId])
 

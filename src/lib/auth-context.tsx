@@ -112,10 +112,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const user = convertSupabaseUser(session.user)
             setUser(user)
           }
+          // User is set (either by syncUserToBackend or convertSupabaseUser), mark loading as complete
+          setIsLoading(false)
+        } else {
+          // No session found, mark loading as complete
+          setIsLoading(false)
         }
       } catch (error) {
         console.error('Error checking auth:', error)
-      } finally {
+        // On error, still mark loading as complete
         setIsLoading(false)
       }
     }

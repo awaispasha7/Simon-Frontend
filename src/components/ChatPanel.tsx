@@ -56,6 +56,7 @@ export function ChatPanel({ _sessionId, onSessionUpdate }: ChatPanelProps) {
       
       setCurrentSessionId('')
       sessionIdRef.current = ''
+      isNewSessionRef.current = false // Reset new session flag
       
       // Reset messages to initial state
       setMessages([
@@ -133,6 +134,9 @@ export function ChatPanel({ _sessionId, onSessionUpdate }: ChatPanelProps) {
   
   // Use ref to store session ID for immediate access (bypasses React state async updates)
   const sessionIdRef = useRef<string | undefined>(_sessionId || undefined)
+  
+  // Track if current message is creating a new session (used to dispatch correct event)
+  const isNewSessionRef = useRef<boolean>(false)
   
   // Sync local state with props when they change
   // CRITICAL: Sync props to local state immediately when props change
@@ -260,7 +264,8 @@ export function ChatPanel({ _sessionId, onSessionUpdate }: ChatPanelProps) {
       setCurrentSessionId(sessionIdToUse || undefined)
       
       // For authenticated users with no session ID, try to restore the most recent session
-      if (isAuthenticated && user && !sessionIdToUse) {
+      // BUT: Don't restore if _sessionId is explicitly '' (user clicked "New Chat")
+      if (isAuthenticated && user && !sessionIdToUse && _sessionId !== '') {
         try {
           const { sessionApi } = await import('@/lib/api')
           const sessionsResponse = await sessionApi.getSessions(1) // Get the most recent session
@@ -406,6 +411,39 @@ export function ChatPanel({ _sessionId, onSessionUpdate }: ChatPanelProps) {
     }
   }, [hookSessionId])
 
+  // Listen for session deleted events to clear chat if current session is deleted
+  useEffect(() => {
+    const handleSessionDeleted = (event: CustomEvent) => {
+      const { sessionId: deletedSessionId } = event.detail || {}
+      const currentSession = currentSessionId || sessionIdRef.current
+      
+      // If the deleted session is the current one, clear the chat
+      if (deletedSessionId && deletedSessionId === currentSession) {
+        console.log('🗑️ [CHAT] Current session was deleted - clearing chat content')
+        setCurrentSessionId('')
+        sessionIdRef.current = ''
+        setMessages([
+          {
+            role: 'assistant',
+            content: "Hey! 👋 I'm your content creation assistant! Let's create some killer short-form videos for Instagram and TikTok. What topic are you passionate about sharing today?"
+          }
+        ])
+        // Clear localStorage
+        try {
+          localStorage.removeItem('chat_session')
+        } catch (e) {
+          console.error('Failed to clear localStorage:', e)
+        }
+      }
+    }
+
+    window.addEventListener('sessionDeleted', handleSessionDeleted as EventListener)
+    
+    return () => {
+      window.removeEventListener('sessionDeleted', handleSessionDeleted as EventListener)
+    }
+  }, [currentSessionId])
+
   const getDynamicTypingMessage = (userMessage: string) => {
     const message = userMessage.toLowerCase()
     
@@ -539,6 +577,7 @@ export function ChatPanel({ _sessionId, onSessionUpdate }: ChatPanelProps) {
       // CRITICAL: Create session if none exists
       if (!sessionId) {
         console.log('💬 [CHAT] No session ID available, creating new session...')
+        isNewSessionRef.current = true // Mark as new session
         
         // Try to create a session
         try {
@@ -572,14 +611,7 @@ export function ChatPanel({ _sessionId, onSessionUpdate }: ChatPanelProps) {
           }
           
           console.log('💬 [CHAT] Using newly created session:', sessionId)
-          
-          // Dispatch sessionCreated event to refresh sidebar
-          window.dispatchEvent(new CustomEvent('sessionCreated', { 
-            detail: { 
-              sessionId: sessionId
-            } 
-          }))
-          console.log('📡 Session created event dispatched:', sessionId)
+          // Don't dispatch sessionCreated here - wait until message is saved
         } catch (error) {
           console.error('💬 [CHAT] Failed to create session:', error)
           throw new Error('Failed to create session - please try again')
@@ -686,20 +718,34 @@ export function ChatPanel({ _sessionId, onSessionUpdate }: ChatPanelProps) {
                       if (parsed.sessionId === data.metadata.session_id) {
                         console.log('✅ localStorage verification successful')
                         
-                        // Only dispatch event after localStorage is confirmed updated
+                        // Dispatch events after localStorage is confirmed updated
+                        // Use sessionCreated for new sessions, sessionUpdated for existing ones
                         setTimeout(() => {
-                          window.dispatchEvent(new CustomEvent('sessionUpdated', { 
-                            detail: { 
-                              sessionId: data.metadata.session_id
-                            } 
-                          }))
-                          console.log('📡 Session update event dispatched:', data.metadata.session_id)
+                          if (isNewSessionRef.current) {
+                            // New session - dispatch sessionCreated event to refresh sidebar
+                            window.dispatchEvent(new CustomEvent('sessionCreated', { 
+                              detail: { 
+                                sessionId: data.metadata.session_id
+                              } 
+                            }))
+                            console.log('📡 Session created event dispatched:', data.metadata.session_id)
+                            // Mark that we need to refresh after stream completes
+                            isNewSessionRef.current = true // Keep flag true to trigger refresh later
+                          } else {
+                            // Existing session - dispatch sessionUpdated event
+                            window.dispatchEvent(new CustomEvent('sessionUpdated', { 
+                              detail: { 
+                                sessionId: data.metadata.session_id
+                              } 
+                            }))
+                            console.log('📡 Session update event dispatched:', data.metadata.session_id)
+                          }
                           
                           // Also notify parent component if callback is provided
                           if (onSessionUpdate) {
                             onSessionUpdate(data.metadata.session_id)
                           }
-                        }, 50) // Small delay to ensure localStorage is fully written
+                        }, 200) // Small delay to ensure message is saved and localStorage is fully written
                       } else {
                         console.error('❌ localStorage verification failed - session ID mismatch')
                       }
@@ -753,8 +799,23 @@ export function ChatPanel({ _sessionId, onSessionUpdate }: ChatPanelProps) {
       
       // Ensure loading state is cleared
       setIsLoading(false)
+      
+      // If this was a new session, dispatch event to refresh sidebar (no page refresh needed)
+      if (isNewSessionRef.current) {
+        console.log('🔄 New session created - dispatching event to update sidebar')
+        isNewSessionRef.current = false // Reset flag
+        // Dispatch event to refresh sidebar - the sidebar will refetch automatically
+        window.dispatchEvent(new CustomEvent('sessionCreated', { 
+          detail: { 
+            sessionId: sessionIdRef.current
+          } 
+        }))
+      }
     } catch (error) {
       console.error('Error sending message:', error)
+      
+      // Reset new session flag on error to prevent unwanted refresh
+      isNewSessionRef.current = false
       
       // Show specific error message for session issues
       let errorContent = "I'm sorry, I encountered an error. Please make sure the backend server is running and try again."

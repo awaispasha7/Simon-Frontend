@@ -52,8 +52,11 @@ export function SessionsSidebar({
 
     const handleSessionCreated = () => {
       console.log('🆕 New session created, refreshing sessions list')
-      queryClient.invalidateQueries({ queryKey: ['sessionsSidebar'] })
-      queryClient.refetchQueries({ queryKey: ['sessionsSidebar'] })
+      // Invalidate and refetch with a small delay to ensure backend has saved the session
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ['sessionsSidebar'] })
+        queryClient.refetchQueries({ queryKey: ['sessionsSidebar'] })
+      }, 300)
     }
 
     window.addEventListener('sessionUpdated', handleSessionUpdate)
@@ -159,10 +162,17 @@ export function SessionsSidebar({
       
       return { previousSessions }
     },
-    onSuccess: () => {
+    onSuccess: (_, sessionId) => {
       // Invalidate and immediately refetch sessions to ensure consistency
       queryClient.invalidateQueries({ queryKey: ['sessionsSidebar'] })
       queryClient.refetchQueries({ queryKey: ['sessionsSidebar'] })
+      
+      // Dispatch sessionDeleted event to notify chat panel to clear content if needed
+      window.dispatchEvent(new CustomEvent('sessionDeleted', { 
+        detail: { 
+          sessionId: sessionId
+        } 
+      }))
     },
     onError: (error, sessionId, context) => {
       // If the mutation fails, use the context returned from onMutate to roll back
@@ -452,29 +462,10 @@ export function SessionsSidebar({
                   handleDeleteSession(session.session_id)
                 }}
                 disabled={deleteSessionMutation.isPending}
-                className={`
-                  ${colors.textMuted} 
-                  text-black! hover:bg-linear-to-r! hover:from-red-500! hover:to-red-600!
-                  dark:hover:from-red-600! dark:hover:to-red-700!
-                  p-2! rounded-lg! 
-                  opacity-0! group-hover:opacity-100! 
-                  transition-all! duration-300! ease-out!
-                  hover:scale-110! hover:shadow-lg! hover:shadow-red-500/25!
-                  active:scale-95! active:shadow-inner!
-                  border! border-transparent! hover:border-red-300! dark:hover:border-red-600!
-                  hover:animate-pulse! hover:cursor-pointer!
-                  disabled:opacity-50! disabled:cursor-not-allowed! disabled:transform-none!
-                `}
-                style={{
-                  padding: '0.5rem',
-                  cursor: 'pointer',
-                  flexShrink: 0
-                }}
+                className="opacity-60 group-hover:opacity-100 hover:opacity-100 p-1.5 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-500 hover:text-red-600 dark:hover:text-red-400 transition-all duration-200 ease-out hover:scale-110 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed disabled:transform-none flex-shrink-0"
                 title="Delete Session"
               >
-                <div className="relative z-10">
-                  <Trash2 className="h-3 w-3" />
-                </div>
+                <Trash2 className="h-4 w-4" />
               </button>
             </div>
           </div>

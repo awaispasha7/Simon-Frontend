@@ -266,17 +266,7 @@ export default function LoginPage() {
                 </button>
               </div>
 
-              {/* Continue without Login */}
-              <div className="mt-6 text-center">
-                <button
-                  type="button"
-                  onClick={() => router.push('/chat')}
-                  className=" text-cyan-500! text-sm! hover:text-white! transition-all! focus:outline-none"
-                  style={{ background: 'transparent', border: 'none', padding: 0, cursor: 'pointer' }}
-                >
-                  Continue to Chat without Login
-                </button>
-              </div>
+              {/* Continue without Login - Removed as authentication is required */}
 
               {/* Signup Link */}
               <div className="auth-signup-link">

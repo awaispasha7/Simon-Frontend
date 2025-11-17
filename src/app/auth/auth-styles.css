@@ -3,7 +3,7 @@
 /* Base Styles */
 .auth-container {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #ef4444 0%, #f97316 50%, #ea580c 100%);
   min-height: 100vh;
   display: flex;
   align-items: center;
@@ -40,7 +40,7 @@
   left: -100%;
   width: 100%;
   height: 2px;
-  background: linear-gradient(90deg, transparent, #06b6d4, transparent);
+  background: linear-gradient(90deg, transparent, #ef4444, transparent);
   transition: left 0.5s ease;
 }
 
@@ -120,16 +120,16 @@
 
 .auth-input:focus,
 .auth-input:not(:placeholder-shown) {
-  border-color: #06b6d4;
+  border-color: #ef4444;
   background: rgba(255, 255, 255, 0.15);
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(6, 182, 212, 0.2);
+  box-shadow: 0 8px 25px rgba(239, 68, 68, 0.3);
 }
 
 .auth-input:focus + .auth-label,
 .auth-input:not(:placeholder-shown) + .auth-label {
   transform: translateY(-1.75rem) scale(0.85);
-  color: #06b6d4;
+  color: #ef4444;
   font-weight: 500;
 }
 
@@ -179,7 +179,7 @@
 
 /* Button Styles */
 .auth-btn {
-  background: linear-gradient(135deg, #6366f1 0%, #06b6d4 100%);
+  background: linear-gradient(135deg, #ef4444 0%, #f97316 100%);
   border: none;
   border-radius: 12px;
   padding: 16px 24px;
@@ -191,7 +191,7 @@
   position: relative;
   overflow: hidden;
   transform: translateY(0);
-  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
 }
 
 .auth-btn::before {
@@ -207,7 +207,7 @@
 
 .auth-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(99, 102, 241, 0.6);
+  box-shadow: 0 8px 25px rgba(239, 68, 68, 0.6);
 }
 
 .auth-btn:hover::before {
@@ -287,8 +287,8 @@
 }
 
 .auth-remember-wrapper input[type="checkbox"]:checked ~ .auth-checkbox-label .auth-checkmark {
-  background: #06b6d4;
-  border-color: #06b6d4;
+  background: #ef4444;
+  border-color: #ef4444;
   transform: scale(1.1);
 }
 
@@ -394,7 +394,7 @@
 }
 
 .auth-forgot-password {
-  color: #06b6d4;
+  color: #ef4444;
   text-decoration: none;
   font-size: 14px;
   font-weight: 500;
@@ -409,7 +409,7 @@
   left: 0;
   width: 0;
   height: 1px;
-  background: #06b6d4;
+  background: #ef4444;
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -533,7 +533,7 @@
 }
 
 .auth-signup-link .a {
-  color: #06b6d4;
+  color: #ef4444;
   text-decoration: none;
   font-weight: 500;
   transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -604,8 +604,8 @@
 }
 
 .auth-terms-checkbox:checked ~ .auth-terms-label .auth-terms-checkmark {
-  background: #06b6d4;
-  border-color: #06b6d4;
+  background: #ef4444;
+  border-color: #ef4444;
   transform: scale(1.1);
 }
 
@@ -618,7 +618,7 @@
 }
 
 .auth-terms-link {
-  color: #06b6d4;
+  color: #ef4444;
   text-decoration: none;
   transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   background: none;
