@@ -186,15 +186,7 @@ export default function ChatPage() {
 
   return (
     <>
-      {/* Global loader overlay */}
-      {authLoading && (
-        <div className="fixed inset-0 z-1000 flex items-center justify-center bg-white/70 dark:bg-black/60 backdrop-blur-sm">
-          <div className="flex flex-col items-center gap-3">
-            <div className="h-12 w-12 border-4 border-red-500 border-t-transparent rounded-full animate-spin" />
-            <span className="text-sm text-gray-700 dark:text-gray-300">Loading...</span>
-          </div>
-        </div>
-      )}
+      {/* GlobalLoader component handles all loading states */}
       <div className={`w-screen overflow-hidden ${colors.background} flex flex-col`} style={{ height: 'calc(var(--vh, 1vh) * 100)' }}>
         {/* Topbar - Full width across entire screen */}
         <div className="shrink-0">
