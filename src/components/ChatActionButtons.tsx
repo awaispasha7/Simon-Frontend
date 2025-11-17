@@ -19,16 +19,16 @@ export function InteractiveButton({ type, onClick, className }: InteractiveButto
         return {
           icon: UserPlus,
           text: 'Sign Up',
-          gradient: 'from-purple-500 to-pink-500',
-          hoverGradient: 'from-purple-600 to-pink-600',
+          gradient: 'from-red-500 to-orange-500',
+          hoverGradient: 'from-red-600 to-orange-600',
           description: 'Create unlimited stories'
         }
       case 'login':
         return {
           icon: LogIn,
           text: 'Sign In',
-          gradient: 'from-blue-500 to-indigo-500',
-          hoverGradient: 'from-blue-600 to-indigo-600',
+          gradient: 'from-red-500 to-orange-500',
+          hoverGradient: 'from-red-600 to-orange-600',
           description: 'Access your stories'
         }
       case 'new-story':

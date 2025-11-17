@@ -63,5 +63,50 @@ export const auth = {
   // Listen to auth state changes
   onAuthStateChange: (callback: (event: string, session: unknown) => void) => {
     return supabase.auth.onAuthStateChange(callback)
+  },
+
+  // Update password
+  updatePassword: async (newPassword: string) => {
+    const { data, error } = await supabase.auth.updateUser({
+      password: newPassword
+    })
+    return { data, error }
+  },
+
+  // Update email
+  updateEmail: async (newEmail: string) => {
+    const { data, error } = await supabase.auth.updateUser({
+      email: newEmail
+    })
+    return { data, error }
+  },
+
+  // Delete user account (requires admin API or user deletion endpoint)
+  deleteUser: async () => {
+    // Note: This requires admin privileges or a backend endpoint
+    // For now, we'll use the admin API if available
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      return { error: { message: 'No user found' } }
+    }
+    
+    // Delete user data from backend first
+    try {
+      const response = await fetch('/api/v1/users/me', {
+        method: 'DELETE',
+        headers: {
+          'X-User-ID': user.id
+        }
+      })
+      if (!response.ok) {
+        console.warn('Failed to delete user from backend')
+      }
+    } catch (error) {
+      console.warn('Error deleting user from backend:', error)
+    }
+    
+    // Sign out (user deletion from Supabase auth requires admin API)
+    const { error } = await supabase.auth.signOut()
+    return { error }
   }
 }

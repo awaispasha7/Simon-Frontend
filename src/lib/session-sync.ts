@@ -62,10 +62,11 @@ class SessionSyncManager {
         return
       }
 
-          // For anonymous users, check for existing session
+          // Authentication required - no anonymous users
           const currentUser = this.getCurrentUser()
           if (!currentUser) {
-            console.log('🔄 [DEMO] Anonymous user - checking for existing session')
+            console.log('⚠️ Authentication required - cannot sync session')
+            return
           }
 
       console.log('🔍 Validating stored session:', storedSession.sessionId)

@@ -188,7 +188,7 @@ export function ResizableSidebar({
       {isMobile && (
         <button
           onClick={toggleCollapse}
-          className={`fixed top-1/2 z-50 p-8 bg-linear-to-r from-blue-500 to-purple-600 dark:from-blue-600 dark:to-purple-700 rounded-full shadow-2xl border-2 border-white dark:border-gray-800 hover:from-blue-600 hover:to-purple-700 dark:hover:from-blue-700 dark:hover:to-purple-800 transition-all duration-300 hover:scale-110 active:scale-95 sm:hidden animate-pulse transform -translate-y-1/2 ${
+          className={`fixed top-1/2 z-50 p-8 bg-linear-to-r from-red-500 to-orange-600 dark:from-red-600 dark:to-orange-700 rounded-full shadow-2xl border-2 border-white dark:border-gray-800 hover:from-red-600 hover:to-orange-700 dark:hover:from-red-700 dark:hover:to-orange-800 transition-all duration-300 hover:scale-110 active:scale-95 sm:hidden animate-pulse transform -translate-y-1/2 ${
             isCollapsed ? 'left-0' : 'right-0'
           }`} style={{ padding: '1.5rem 0.5rem', borderRadius: '0 30% 30% 0' }}
           title={isCollapsed ? "Open sidebar - View dossier & previous chats" : "Close sidebar"}

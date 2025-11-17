@@ -1,27 +1,55 @@
 import ky from 'ky'
+import { supabase } from './supabase'
 
-// Get user ID and session info from localStorage for API calls
-const getUserHeaders = () => {
+// Get user ID and session info from current Supabase session (not localStorage to avoid stale data)
+const getUserHeaders = async () => {
   if (typeof window === 'undefined') return {}
   
   try {
-    const user = localStorage.getItem('user')
-    const session = localStorage.getItem('chat_session')
+    // Get current Supabase session to ensure we use the correct user ID
+    const { data: { session }, error } = await supabase.auth.getSession()
+    
+    if (error) {
+      console.error('❌ [API] Error getting Supabase session:', error)
+    }
     
     const headers: Record<string, string> = {}
     
-    if (user) {
-      const userData = JSON.parse(user)
-      headers['X-User-ID'] = userData.user_id
+    if (session?.user) {
+      // Check if backend has a different user_id for this email (backend is source of truth)
+      // This happens when user logs in with different Supabase account but same email
+      const backendUserId = typeof window !== 'undefined' ? localStorage.getItem('backend_user_id') : null
+      
+      if (backendUserId) {
+        // Use backend user_id (source of truth) instead of Supabase Auth user_id
+        headers['X-User-ID'] = backendUserId
+        if (process.env.NODE_ENV === 'development') {
+          console.log('✅ [API] Using backend user ID (from email lookup):', backendUserId)
+          console.log('   Supabase Auth user ID:', session.user.id)
+        }
+      } else {
+        // Use the current Supabase user ID
+        headers['X-User-ID'] = session.user.id
+        if (process.env.NODE_ENV === 'development') {
+          console.log('✅ [API] Using Supabase user ID:', session.user.id)
+        }
+      }
+    } else {
+      // No active session - this shouldn't happen for authenticated users
+      console.warn('⚠️ [API] No active Supabase session found')
+      // Don't use localStorage fallback - force user to log in again
     }
     
-    if (session) {
-      const sessionData = JSON.parse(session)
-      if (sessionData.sessionId) {
-        headers['X-Session-ID'] = sessionData.sessionId
-      }
-      if (sessionData.projectId) {
-        headers['X-Project-ID'] = sessionData.projectId
+    // Get session ID from localStorage (chat session, not auth session)
+    const chatSession = localStorage.getItem('chat_session')
+    if (chatSession) {
+      try {
+        const sessionData = JSON.parse(chatSession)
+        if (sessionData.sessionId) {
+          headers['X-Session-ID'] = sessionData.sessionId
+        }
+      } catch (e) {
+        console.error('❌ Error parsing chat session:', e)
       }
     }
     
@@ -39,18 +67,34 @@ export const api = ky.create({
   retry: 2,
   hooks: {
     beforeRequest: [
-      (request) => {
-        // Add user ID header to all requests
-        const headers = getUserHeaders()
+      async (request) => {
+        // Add user ID header to all requests (async to get current Supabase session)
+        const headers = await getUserHeaders()
         Object.entries(headers).forEach(([key, value]) => {
           request.headers.set(key, value)
         })
         
         // Add Authorization header if token is available
         if (typeof window !== 'undefined') {
-          const token = localStorage.getItem('access_token')
-          if (token) {
-            request.headers.set('Authorization', `Bearer ${token}`)
+          // Get token from Supabase session instead of localStorage
+          try {
+            const { data: { session } } = await supabase.auth.getSession()
+            if (session?.access_token) {
+              request.headers.set('Authorization', `Bearer ${session.access_token}`)
+            } else {
+              // Fallback to localStorage
+              const token = localStorage.getItem('access_token')
+              if (token) {
+                request.headers.set('Authorization', `Bearer ${token}`)
+              }
+            }
+          } catch (error) {
+            console.error('❌ Error getting auth token:', error)
+            // Fallback to localStorage
+            const token = localStorage.getItem('access_token')
+            if (token) {
+              request.headers.set('Authorization', `Bearer ${token}`)
+            }
           }
         }
       }
@@ -61,11 +105,10 @@ export const api = ky.create({
 // API endpoints for the new session-based system
 export const sessionApi = {
   // Chat with session support
-  chat: (text: string, sessionId?: string, projectId?: string) => {
-    const headers = getUserHeaders()
+  chat: (text: string, sessionId?: string) => {
+    // Headers are automatically added by beforeRequest hook
     return api.post('api/v1/chat', { 
-      json: { text, session_id: sessionId, project_id: projectId },
-      headers
+      json: { text, session_id: sessionId }
     })
   },
   
@@ -90,10 +133,9 @@ export const sessionApi = {
   // Get session messages
   getSessionMessages: async (sessionId: string, limit = 50, offset = 0) => {
     try {
-      const headers = getUserHeaders()
+      // Headers are automatically added by beforeRequest hook
       return await api.get(`api/v1/sessions/${sessionId}/messages`, { 
-        searchParams: { limit, offset },
-        headers
+        searchParams: { limit, offset }
       }).json()
     } catch (error: unknown) {
       // For session validation, we need 404s to be thrown as errors
@@ -150,44 +192,104 @@ export const sessionApi = {
   },
   
   // Get current user
-  getCurrentUser: () => {
-    const headers = getUserHeaders()
-    return api.get('api/v1/users/me', { headers }).json()
+  getCurrentUser: async () => {
+    // Headers are automatically added by beforeRequest hook
+    return await api.get('api/v1/users/me').json()
   },
   
   // Create or get session
-  getOrCreateSession: async (sessionId?: string, projectId?: string) => {
-    const headers = getUserHeaders()
+  getOrCreateSession: async (sessionId?: string) => {
+    // Get headers for debug logging
+    const headers = await getUserHeaders()
+    
+    // Ensure we have a user ID
+    if (!headers['X-User-ID']) {
+      console.error('❌ [API] Cannot create session: No user ID found')
+      throw new Error('User not authenticated')
+    }
+    
+    // Log user ID for debugging (only in development)
+    if (process.env.NODE_ENV === 'development' && headers['X-User-ID']) {
+      console.log('🔍 [API] Creating session for user:', headers['X-User-ID'])
+    }
+    
     try {
+      // Build request body - FastAPI Body(None) accepts null or the field being omitted
+      // We'll send null explicitly to be safe
+      const jsonBody: { session_id: string | null } = {
+        session_id: (sessionId && sessionId.trim()) ? sessionId : null
+      }
+      
+      // Headers are automatically added by beforeRequest hook, but we can also pass them explicitly
       return await api.post('api/v1/session', {
-        json: { session_id: sessionId, project_id: projectId },
-        headers
+        json: jsonBody
       }).json()
     } catch (error: unknown) {
-      console.error('❌ getOrCreateSession error:', error)
-      if (error && typeof error === 'object' && 'response' in error && 
-          error.response && typeof error.response === 'object' && 'status' in error.response &&
-          error.response.status === 404) {
-        // Session endpoint not available, return mock response
-        return {
-          success: false,
-          session_id: sessionId || null,
-          project_id: projectId || null,
-          created: false
+      // ky throws HTTPError with response property
+      if (error && typeof error === 'object' && 'response' in error) {
+        const httpError = error as any
+        const status = httpError.response?.status
+        
+        if (status === 404) {
+          // Try to get error message from response
+          try {
+            const errorData = await httpError.response.json()
+            
+            // If error says "User not found", try to sync the user first
+            if (errorData.detail && errorData.detail.includes('User not found')) {
+              console.warn('⚠️ [API] User not found in backend, attempting to sync user...')
+              
+              // Get current Supabase session to sync user
+              const { data: { session } } = await supabase.auth.getSession()
+              if (session?.user) {
+                // Sync user to backend
+                try {
+                  await sessionApi.createUser({
+                    user_id: session.user.id,
+                    email: session.user.email,
+                    display_name: session.user.user_metadata?.display_name || session.user.email?.split('@')[0],
+                    avatar_url: session.user.user_metadata?.avatar_url
+                  })
+                  
+                  console.log('✅ [API] User synced, retrying session creation...')
+                  
+                  // Retry session creation after user sync
+                  const jsonBody: { session_id: string | null } = {
+                    session_id: (sessionId && sessionId.trim()) ? sessionId : null
+                  }
+                  
+                  return await api.post('api/v1/session', {
+                    json: jsonBody
+                  }).json()
+                } catch (syncError) {
+                  console.error('❌ [API] Failed to sync user:', syncError)
+                  throw error // Throw original error
+                }
+              } else {
+                console.error('❌ [API] No Supabase session available to sync user')
+                throw error
+              }
+            } else {
+              // Other 404 error (e.g., endpoint not available)
+              return {
+                success: false,
+                session_id: sessionId || null,
+                created: false
+              }
+            }
+          } catch (e) {
+            // Response might not be JSON or already consumed
+            console.error('❌ [API] Could not parse error response:', e)
+            throw error
+          }
         }
       }
+      
       throw error
     }
   },
   
-  // Migrate anonymous session to authenticated user
-  migrateSession: (anonymousUserId: string, authenticatedUserId: string) =>
-    api.post('api/v1/migrate-session', {
-      json: { 
-        anonymous_user_id: anonymousUserId,
-        authenticated_user_id: authenticatedUserId 
-      }
-    }).json(),
+  // Anonymous session migration removed - authentication required
   
   // Cleanup expired sessions
   cleanupExpiredSessions: () =>
@@ -198,10 +300,9 @@ export const sessionApi = {
 export const projectApi = {
   // Create a new project
   createProject: async (name: string, description?: string) => {
-    const headers = getUserHeaders()
+    // Headers are automatically added by beforeRequest hook
     return await api.post('api/v1/projects', {
-      json: { name, description },
-      headers
+      json: { name, description }
     }).json<{
       project_id: string
       name: string
@@ -215,10 +316,8 @@ export const projectApi = {
   
   // Get all projects for user
   getProjects: async () => {
-    const headers = getUserHeaders()
-    return await api.get('api/v1/projects', {
-      headers
-    }).json<{
+    // Headers are automatically added by beforeRequest hook
+    return await api.get('api/v1/projects').json<{
       projects: Array<{
         project_id: string
         name: string
@@ -234,10 +333,8 @@ export const projectApi = {
   
   // Get specific project with sessions
   getProject: async (projectId: string) => {
-    const headers = getUserHeaders()
-    return await api.get(`api/v1/projects/${projectId}`, {
-      headers
-    }).json<{
+    // Headers are automatically added by beforeRequest hook
+    return await api.get(`api/v1/projects/${projectId}`).json<{
       project_id: string
       name: string
       description?: string
@@ -257,18 +354,15 @@ export const projectApi = {
   
   // Delete a project
   deleteProject: async (projectId: string) => {
-    const headers = getUserHeaders()
-    return await api.delete(`api/v1/projects/${projectId}`, {
-      headers
-    }).json()
+    // Headers are automatically added by beforeRequest hook
+    return await api.delete(`api/v1/projects/${projectId}`).json()
   },
 
   // Rename a project (updates dossier title)
   renameProject: async (projectId: string, name: string) => {
-    const headers = getUserHeaders()
+    // Headers are automatically added by beforeRequest hook
     return await api.put(`api/v1/projects/${projectId}/name`, {
-      json: { name },
-      headers
+      json: { name }
     }).json<{ success: boolean; project_id: string; name: string }>()
   },
 }

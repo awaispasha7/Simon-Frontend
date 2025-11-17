@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { CheckCircle, XCircle, ArrowLeft, Mail } from 'lucide-react'
+import Image from 'next/image'
 
 export default function AuthCallback() {
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
@@ -92,8 +93,15 @@ export default function AuthCallback() {
         {/* Main Card */}
         <div className="bg-white/10 backdrop-blur-xl rounded-3xl border border-white/20 shadow-2xl p-8 text-center flex flex-col gap-4 items-center">
           {/* Logo */}
-          <div className="w-20 h-20 bg-linear-to-br from-blue-500 via-sky-500 to-emerald-500 rounded-2xl flex items-center justify-center mx-auto mb-8 shadow-lg shadow-blue-500/30">
-            <span className="text-3xl text-white font-bold">SW</span>
+          <div className="relative w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-8 shadow-lg overflow-hidden bg-white animate-bounce-slow">
+            <div className="absolute inset-0 rounded-2xl border-2 border-red-500/30 animate-spin-slow"></div>
+            <Image
+              src="/agent-logo.svg"
+              alt="Simon's Chatbot"
+              width={80}
+              height={80}
+              className="w-full h-full object-contain animate-pulse-slow"
+            />
           </div>
 
           {/* Status Content */}

@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect } from 'react'
+import Image from 'next/image'
 
 interface CompletionModalProps {
   open: boolean
@@ -34,11 +35,15 @@ export function CompletionModal({ open, title, onClose, onNewStory, onViewDossie
         style={{ borderRadius: '1rem', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.35)' }}
       >
         <div className="flex! items-center! gap-3! mb-3!">
-          <div
-            className="w-10! h-10! rounded-full! text-white! flex! items-center! justify-center! font-bold!"
-            style={{ background: 'linear-gradient(135deg, #34d399, #3b82f6)' }}
-          >
-            SW
+          <div className="relative! w-10! h-10! rounded-full! flex! items-center! justify-center! overflow-hidden! bg-white! animate-bounce-slow!">
+            <div className="absolute! inset-0! rounded-full! border-2! border-red-500/30! animate-spin-slow!"></div>
+            <Image
+              src="/agent-logo.svg"
+              alt="Simon's Chatbot"
+              width={40}
+              height={40}
+              className="w-full! h-full! object-contain! animate-pulse-slow!"
+            />
           </div>
           <h3 className="text-lg! font-semibold! text-gray-900! dark:text-gray-100!">Content Ready</h3>
         </div>

@@ -58,22 +58,21 @@ export function MessageBubble({
       marginBottom: '16px'
     }}>
       {!isUser && (
-        <div className="h-9 w-9 mt-1 shrink-0 ring-2 ring-green-200 rounded-full flex items-center justify-center" style={{ marginLeft: '16px', marginTop: '16px' }}>
-          <div className="bg-linear-to-br from-green-200 to-green-300 text-green-800 text-xs font-bold shadow-sm rounded-full w-full h-full flex items-center justify-center">
-            <Image 
-              src="/swt-logo.svg" 
-              alt="AI Assistant" 
-              width={36} 
-              height={36}
-              className="w-9 h-9"
-            />
-          </div>
+        <div className="h-8 w-8 sm:h-9 sm:w-9 mt-1 shrink-0 flex items-center justify-center rounded-lg!" style={{ marginLeft: '8px', marginTop: '8px' }}>
+          <Image 
+            src="/agent-logo.svg" 
+            alt="AI Assistant" 
+            width={36} 
+            height={36}
+            className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg"
+            priority
+          />
         </div>
       )}
       <div className={cn(
-        'max-w-[70%] rounded-xl px-8 py-6 text-sm leading-relaxed transform transition-all duration-200 hover:scale-[1.02] relative group',
+        'max-w-[85%] sm:max-w-[70%] rounded-xl px-4 py-4 sm:px-8 sm:py-6 text-xs sm:text-sm leading-relaxed transform transition-all duration-200 hover:scale-[1.01] sm:hover:scale-[1.02] relative group',
         isUser
-          ? 'bg-linear-to-br from-blue-500 via-blue-600 to-blue-700 text-white rounded-br-lg shadow-2xl shadow-blue-500/40 border-2 border-blue-400/40'
+          ? 'bg-linear-to-br from-red-500 via-orange-600 to-orange-700 text-white rounded-br-lg shadow-2xl shadow-red-500/40 border-2 border-red-400/40'
           : resolvedTheme === 'light'
             ? 'bg-linear-to-br from-gray-100 via-gray-50 to-white text-gray-900 backdrop-blur-sm border-2 border-gray-200 rounded-bl-lg shadow-2xl shadow-gray-300/30'
             : 'bg-linear-to-br from-slate-800 via-slate-700 to-slate-600 text-slate-100 backdrop-blur-sm border-2 border-slate-500/70 rounded-bl-lg shadow-2xl shadow-slate-400/30'
@@ -91,9 +90,9 @@ export function MessageBubble({
           </div>
         )}
         
-        <div className="whitespace-pre-wrap leading-relaxed wrap-break-words" style={{ 
-          marginLeft: '10px',
-          marginRight: isUser ? '10px' : '10px'
+        <div className="whitespace-pre-wrap leading-relaxed wrap-break-words break-words" style={{ 
+          marginLeft: '4px',
+          marginRight: '4px'
         }}>
           {content}
         </div>
@@ -151,18 +150,18 @@ export function MessageBubble({
         )}
       </div>
       {isUser && (
-        <div className="h-9 w-9 mt-1 shrink-0 ring-2 ring-blue-200 rounded-full flex items-center justify-center" style={{ marginRight: '16px' }}>
-          <div className="bg-linear-to-br from-blue-200 to-blue-300 text-blue-800 text-xs font-bold shadow-sm rounded-full w-full h-full flex items-center justify-center">
+        <div className="h-8 w-8 sm:h-9 sm:w-9 mt-1 shrink-0 ring-2 ring-red-200 rounded-full flex items-center justify-center" style={{ marginRight: '8px' }}>
+          <div className="bg-linear-to-br from-red-200 to-orange-300 text-red-800 text-xs font-bold shadow-sm rounded-full w-full h-full flex items-center justify-center">
             {isHydrated && profile.userImage ? (
               <Image 
                 src={profile.userImage} 
                 alt="User Profile" 
                 width={24} 
                 height={24}
-                className="w-6 h-6 rounded-full object-cover"
+                className="w-6 h-6 sm:w-6 sm:h-6 rounded-full object-cover"
               />
             ) : (
-              isHydrated ? profile.userName.charAt(0).toUpperCase() : 'U'
+              <span className="text-xs sm:text-sm">{isHydrated ? profile.userName.charAt(0).toUpperCase() : 'U'}</span>
             )}
           </div>
         </div>

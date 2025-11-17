@@ -8,10 +8,9 @@ interface AudioRecorderProps {
   onAudioData: (audioBlob: Blob, transcript: string) => void
   onClose: () => void
   sessionId?: string
-  projectId?: string
 }
 
-export function AudioRecorder({ onAudioData, onClose, sessionId, projectId }: AudioRecorderProps) {
+export function AudioRecorder({ onAudioData, onClose, sessionId }: AudioRecorderProps) {
   const [state, setState] = useState<'recording' | 'paused' | 'accepting' | 'transcribing'>('recording')
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null)
   const [audioUrl, setAudioUrl] = useState<string | null>(null)
@@ -160,7 +159,7 @@ export function AudioRecorder({ onAudioData, onClose, sessionId, projectId }: Au
   const handleSend = async () => {
     if (!audioBlob) return
     console.log('🎤 [AUDIO] handleSend called - starting transcription')
-    console.log('🎤 [AUDIO] Current sessionId:', sessionId, 'projectId:', projectId)
+    console.log('🎤 [AUDIO] Current sessionId:', sessionId)
     
     // Play send sound - use system beep since send.mp3 doesn't exist
     playSystemBeep()

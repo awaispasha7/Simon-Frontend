@@ -73,9 +73,9 @@ export function ProfilePictureUpload({
       {/* Profile Picture Container */}
       <div 
         className={cn(
-          "relative rounded-full bg-linear-to-br from-blue-400 to-purple-500 flex items-center justify-center overflow-hidden transition-all duration-300 cursor-pointer",
+          "relative rounded-full bg-linear-to-br from-red-400 to-orange-500 flex items-center justify-center overflow-hidden transition-all duration-300 cursor-pointer",
           sizeClasses[size],
-          isHovered && "scale-110 shadow-2xl shadow-blue-500/30 ring-4 ring-blue-200/50"
+          isHovered && "scale-110 shadow-2xl shadow-red-500/30 ring-4 ring-red-200/50"
         )}
         onClick={handleClick}
       >

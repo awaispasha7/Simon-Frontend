@@ -117,11 +117,11 @@ export function LoginPromptModal({
           }}
         >
           <div 
-            className="w-16 h-16 bg-linear-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-4"
+            className="w-16 h-16 bg-linear-to-br from-red-500 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-4"
             style={{
               width: '4rem',
               height: '4rem',
-              background: 'linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)',
+              background: 'linear-gradient(135deg, #ef4444 0%, #f97316 100%)',
               borderRadius: '50%',
               display: 'flex',
               alignItems: 'center',
@@ -188,11 +188,11 @@ export function LoginPromptModal({
               }}
             >
               <div 
-                className="w-2 h-2 bg-purple-500 rounded-full mr-3"
+                className="w-2 h-2 bg-red-500 rounded-full mr-3"
                 style={{
                   width: 'clamp(0.375rem, 1vw, 0.5rem)',
                   height: 'clamp(0.375rem, 1vw, 0.5rem)',
-                  backgroundColor: '#8b5cf6',
+                  backgroundColor: '#ef4444',
                   borderRadius: '50%',
                   marginRight: 'clamp(0.5rem, 2vw, 0.75rem)',
                   flexShrink: '0'
@@ -211,11 +211,11 @@ export function LoginPromptModal({
               }}
             >
               <div 
-                className="w-2 h-2 bg-purple-500 rounded-full mr-3"
+                className="w-2 h-2 bg-red-500 rounded-full mr-3"
                 style={{
                   width: 'clamp(0.375rem, 1vw, 0.5rem)',
                   height: 'clamp(0.375rem, 1vw, 0.5rem)',
-                  backgroundColor: '#8b5cf6',
+                  backgroundColor: '#ef4444',
                   borderRadius: '50%',
                   marginRight: 'clamp(0.5rem, 2vw, 0.75rem)',
                   flexShrink: '0'
@@ -234,11 +234,11 @@ export function LoginPromptModal({
               }}
             >
               <div 
-                className="w-2 h-2 bg-purple-500 rounded-full mr-3"
+                className="w-2 h-2 bg-red-500 rounded-full mr-3"
                 style={{
                   width: 'clamp(0.375rem, 1vw, 0.5rem)',
                   height: 'clamp(0.375rem, 1vw, 0.5rem)',
-                  backgroundColor: '#8b5cf6',
+                  backgroundColor: '#ef4444',
                   borderRadius: '50%',
                   marginRight: 'clamp(0.5rem, 2vw, 0.75rem)',
                   flexShrink: '0'
@@ -257,11 +257,11 @@ export function LoginPromptModal({
               }}
             >
               <div 
-                className="w-2 h-2 bg-purple-500 rounded-full mr-3"
+                className="w-2 h-2 bg-red-500 rounded-full mr-3"
                 style={{
                   width: 'clamp(0.375rem, 1vw, 0.5rem)',
                   height: 'clamp(0.375rem, 1vw, 0.5rem)',
-                  backgroundColor: '#8b5cf6',
+                  backgroundColor: '#ef4444',
                   borderRadius: '50%',
                   marginRight: 'clamp(0.5rem, 2vw, 0.75rem)',
                   flexShrink: '0'
@@ -285,10 +285,10 @@ export function LoginPromptModal({
         >
           <button
             onClick={onSignup}
-            className="w-full bg-linear-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-200 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl"
+            className="w-full bg-linear-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-200 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl"
             style={{
               width: '100%',
-              background: 'linear-gradient(90deg, #8b5cf6 0%, #ec4899 100%)',
+              background: 'linear-gradient(90deg, #ef4444 0%, #f97316 100%)',
               color: 'white',
               fontWeight: '600',
               padding: 'clamp(0.75rem, 3vw, 1rem) clamp(1rem, 4vw, 1.5rem)',
@@ -305,12 +305,12 @@ export function LoginPromptModal({
               fontSize: 'clamp(0.875rem, 2.5vw, 1rem)'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'linear-gradient(90deg, #7c3aed 0%, #db2777 100%)'
+              e.currentTarget.style.background = 'linear-gradient(90deg, #dc2626 0%, #ea580c 100%)'
               e.currentTarget.style.boxShadow = '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
               e.currentTarget.style.transform = 'scale(1.02)'
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'linear-gradient(90deg, #8b5cf6 0%, #ec4899 100%)'
+              e.currentTarget.style.background = 'linear-gradient(90deg, #ef4444 0%, #f97316 100%)'
               e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
               e.currentTarget.style.transform = 'scale(1)'
             }}
@@ -321,12 +321,12 @@ export function LoginPromptModal({
           
           <button
             onClick={onLogin}
-            className="w-full bg-white dark:bg-slate-700 border-2 border-purple-500 text-purple-500 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-slate-600 font-semibold py-3 px-4 rounded-xl transition-all duration-200 flex items-center justify-center space-x-2"
+            className="w-full bg-white dark:bg-slate-700 border-2 border-red-500 text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-slate-600 font-semibold py-3 px-4 rounded-xl transition-all duration-200 flex items-center justify-center space-x-2"
             style={{
               width: '100%',
               background: 'white',
-              border: '2px solid #8b5cf6',
-              color: '#8b5cf6',
+              border: '2px solid #ef4444',
+              color: '#ef4444',
               fontWeight: '600',
               padding: 'clamp(0.75rem, 3vw, 1rem) clamp(1rem, 4vw, 1.5rem)',
               borderRadius: 'clamp(0.75rem, 2vw, 1rem)',
@@ -353,39 +353,7 @@ export function LoginPromptModal({
           </button>
         </div>
 
-        {/* Footer */}
-        <div 
-          className="mt-4 text-center"
-          style={{
-            marginTop: 'clamp(1rem, 3vw, 1.5rem)',
-            textAlign: 'center',
-            padding: '0',
-            marginBottom: '0'
-          }}
-        >
-          <button
-            onClick={onClose}
-            className="text-sm text-gray-200 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
-            style={{
-              fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
-              color: '#e5e7eb',
-              background: 'transparent',
-              border: 'none',
-              cursor: 'pointer',
-              transition: 'color 0.2s ease',
-              margin: '0',
-              padding: '0'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.color = '#374151'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.color = '#e5e7eb'
-            }}
-          >
-            Continue as guest
-          </button>
-        </div>
+        {/* Footer removed - authentication required */}
       </div>
     </div>
   )

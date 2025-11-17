@@ -26,17 +26,17 @@ interface AttachedFile {
 
 interface UploadDropzoneProps {
   sessionId?: string
-  projectId?: string
   onFileAttached?: (file: AttachedFile) => void
 }
 
-export function UploadDropzone({ sessionId: propSessionId, projectId: propProjectId, onFileAttached }: UploadDropzoneProps) {
+export function UploadDropzone({ sessionId: propSessionId, onFileAttached }: UploadDropzoneProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([])
   const [error, setError] = useState<string | null>(null)
   const [isDragging, setIsDragging] = useState(false)
   const [isLargeScreen, setIsLargeScreen] = useState(false)
+  const [isSmallScreen, setIsSmallScreen] = useState(false)
   const [isClient, setIsClient] = useState(false)
   
   // Prevent hydration mismatch by only rendering client-side state after mount
@@ -44,13 +44,14 @@ export function UploadDropzone({ sessionId: propSessionId, projectId: propProjec
     setIsClient(true)
   }, [])
   const { resolvedTheme } = useTheme()
-  const { sessionId, projectId, isLoading: sessionLoading } = useSession(propSessionId, propProjectId)
+  const { sessionId, isLoading: sessionLoading } = useSession(propSessionId)
   const { user } = useAuth()
   
 
   // Check screen size for responsive height
   useEffect(() => {
     const checkScreenSize = () => {
+      setIsSmallScreen(window.innerWidth < 350)
       setIsLargeScreen(window.innerWidth >= 640) // sm breakpoint
     }
     
@@ -64,11 +65,9 @@ export function UploadDropzone({ sessionId: propSessionId, projectId: propProjec
 
     console.log('📤 [UPLOAD] Starting upload with:', {
       sessionId,
-      projectId,
       sessionLoading,
       user: user?.user_id,
-      propSessionId,
-      propProjectId
+      propSessionId
     })
 
     // Wait for session to be ready, but allow uploads if we have a user (authenticated)
@@ -79,8 +78,8 @@ export function UploadDropzone({ sessionId: propSessionId, projectId: propProjec
     }
 
     // For authenticated users, we can upload even without a session (it will be created)
-    if (!user && (!sessionId || !projectId)) {
-      console.log('📤 [UPLOAD] No user and no session/project, blocking upload')
+    if (!user && !sessionId) {
+      console.log('📤 [UPLOAD] No user and no session, blocking upload')
       setError('Please wait for session to be ready before uploading files.')
       return
     }
@@ -107,7 +106,6 @@ export function UploadDropzone({ sessionId: propSessionId, projectId: propProjec
         body: formData,
         headers: {
           ...(sessionId && { 'X-Session-ID': sessionId }),
-          ...(projectId && { 'X-Project-ID': projectId }),
           ...(user?.user_id && { 'X-User-ID': user.user_id }),
         },
       })
@@ -141,7 +139,7 @@ export function UploadDropzone({ sessionId: propSessionId, projectId: propProjec
     } finally {
       setUploading(false)
     }
-  }, [sessionId, projectId, sessionLoading, user, onFileAttached])
+  }, [sessionId, sessionLoading, user, onFileAttached])
 
 
   const onFileChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
@@ -189,38 +187,42 @@ export function UploadDropzone({ sessionId: propSessionId, projectId: propProjec
           "h-10 w-10 sm:h-[56px] sm:w-[56px] hover:scale-105 active:scale-95 transition-all duration-200 rounded-lg sm:rounded-xl border-2 border-dashed shadow-sm hover:shadow-md flex items-center justify-center backdrop-blur-sm",
           // Use consistent classes to prevent hydration mismatch
           isClient ? (
-            (sessionLoading || (!user && (!sessionId || !projectId))) ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+            (sessionLoading || (!user && !sessionId)) ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
           ) : "opacity-50 cursor-not-allowed", // Default server state
           isClient ? (
             isDragging 
-              ? "border-blue-500 bg-blue-50/80 dark:bg-blue-900/20" 
+              ? "border-red-500 bg-red-50/80 dark:bg-red-900/20" 
               : resolvedTheme === 'light'
-                ? "border-gray-300 bg-white/50 hover:border-blue-400 hover:bg-white/80"
-                : "border-slate-500 bg-slate-700/50 hover:border-sky-400 hover:bg-slate-600/80"
+                ? "border-gray-300 bg-white/50 hover:border-red-400 hover:bg-white/80"
+                : "border-slate-500 bg-slate-700/50 hover:border-red-400 hover:bg-slate-600/80"
           ) : "border-gray-300 bg-white/50", // Default server state
           isClient && uploading && "opacity-50 cursor-not-allowed"
         )}
         style={{
-          width: isLargeScreen ? '56px' : '40px',
-          height: isLargeScreen ? '56px' : '40px',
+          width: isLargeScreen ? '56px' : isSmallScreen ? '32px' : '40px',
+          height: isLargeScreen ? '56px' : isSmallScreen ? '32px' : '40px',
         }}
         onClick={() => {
-          if (!uploading && !sessionLoading && (user || (sessionId && projectId))) {
+          if (!uploading && !sessionLoading && (user || sessionId)) {
             if (fileInputRef.current) {
               fileInputRef.current.click()
             }
           }
         }}
-        disabled={!isClient || Boolean(uploading || sessionLoading || (!user && (!sessionId || !projectId)))}
+        disabled={!isClient || Boolean(uploading || sessionLoading || (!user && !sessionId))}
       >
         {uploading ? (
-          <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 dark:text-sky-400 animate-spin" />
+          <Loader2 className={cn(
+            "text-red-600 dark:text-red-400 animate-spin",
+            isSmallScreen ? "h-3 w-3" : "h-4 w-4 sm:h-5 sm:w-5"
+          )} />
         ) : (
           <Paperclip className={cn(
-            "h-4 w-4 sm:h-5 sm:w-5 transition-colors",
+            "transition-colors",
+            isSmallScreen ? "h-3 w-3" : "h-4 w-4 sm:h-5 sm:w-5",
             resolvedTheme === 'light'
-              ? "text-gray-600 hover:text-blue-600"
-              : "text-slate-300 hover:text-sky-400"
+              ? "text-gray-600 hover:text-red-600"
+              : "text-slate-300 hover:text-red-400"
           )} />
         )}
       </button>

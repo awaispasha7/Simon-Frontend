@@ -265,7 +265,7 @@ export function SidebarDossier({ sessionId, projectId, onClose }: SidebarDossier
       {projectId && (
         <div className={`${colors.cardBackground} border-2 ${colors.borderSecondary} rounded-lg p-4 mb-4 shadow-sm`}>
           <div className="flex items-center gap-3">
-            <div className="w-3 h-3 bg-linear-to-br from-blue-500 to-purple-500 rounded-full"></div>
+            <div className="w-3 h-3 bg-linear-to-br from-red-500 to-orange-500 rounded-full"></div>
             <div className="flex-1">
               <div className={`text-xs font-semibold ${colors.textSecondary} uppercase tracking-wide mb-1`}>Project</div>
               <div className={`text-sm font-mono ${colors.text} break-all`} style={{ 
@@ -320,7 +320,7 @@ export function SidebarDossier({ sessionId, projectId, onClose }: SidebarDossier
       <div>
         <div className="pb-3">
             <h3 className={`text-lg flex items-center gap-2 font-semibold ${colors.text}`}>
-              <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
               Key Details
             </h3>
         </div>

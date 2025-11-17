@@ -160,11 +160,11 @@ export function ProjectCreationModal({
           }}
         >
           <div 
-            className="w-16 h-16 bg-linear-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-4"
+            className="w-16 h-16 bg-linear-to-br from-red-500 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-4"
             style={{
               width: '4rem',
               height: '4rem',
-              background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
+              background: 'linear-gradient(135deg, #ef4444 0%, #f97316 100%)',
               borderRadius: '50%',
               display: 'flex',
               alignItems: 'center',
@@ -363,10 +363,10 @@ export function ProjectCreationModal({
             <button
               type="submit"
               disabled={isCreating || !projectName.trim()}
-              className="flex-1 px-4 py-3 bg-linear-to-r from-blue-500 to-purple-500 text-white rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-4 py-3 bg-linear-to-r from-red-500 to-orange-500 text-white rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
                 padding: '0.75rem 1rem',
-                background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
+                background: 'linear-gradient(135deg, #ef4444 0%, #f97316 100%)',
                 color: 'rgb(255, 255, 255)',
                 borderRadius: '0.5rem',
                 fontWeight: '500',

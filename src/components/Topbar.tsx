@@ -52,19 +52,19 @@ export function Topbar() {
 
   const [settingsInitialTab, setSettingsInitialTab] = useState<'chat' | 'account'>('chat')
   const handleProfileClick = () => {
-    setSettingsInitialTab('account')
-    setShowProfileSettings(true)
-    setShowProfileDropdown(false)
-  }
-
-  const handleSettingsClick = () => {
     setSettingsInitialTab('chat')
     setShowProfileSettings(true)
     setShowProfileDropdown(false)
   }
 
+  const handleSettingsClick = () => {
+    setSettingsInitialTab('account')
+    setShowProfileSettings(true)
+    setShowProfileDropdown(false)
+  }
 
-  // New Chat functionality for anonymous users
+
+  // Authentication required - no anonymous users
   const handleSignup = () => {
     router.push('/auth/signup')
   }
@@ -75,22 +75,12 @@ export function Topbar() {
 
   const handleNewChat = () => {
     console.log('🆕 [TOPBAR] New Chat button clicked')
-    // For anonymous users, show warning toast with options
-    toast.newChatWarning(
-      'Create New Chat?',
-      'If you create a new chat, your current chat data will be lost forever! To save and load chats, login/signup.',
-      () => {
-        console.log('🆕 [TOPBAR] User confirmed new chat - clearing session')
-        // User confirmed - clear current session and reload page
-        localStorage.removeItem('stories_we_tell_session')
-        window.location.reload()
-      },
-      undefined, // No cancel action needed
-      handleLogin, // Login button
-      handleSignup, // Signup button
-      'Continue',
-      'Cancel'
-    )
+    // Authentication required - redirect to login if not authenticated
+    if (!isAuthenticated) {
+      router.push('/auth/login')
+      return
+    }
+    // Removed anonymous user handling - authentication required
   }
 
   return (
@@ -98,7 +88,7 @@ export function Topbar() {
         <header className={`flex items-center justify-evenly sm:px-6 h-16 border-b ${colors.border} ${colors.backgroundSecondary} backdrop-blur-lg shadow-sm shrink-0 relative z-50`}>
           {/* Left side - Logo and Text */}
           <div className={`flex items-center gap-2 sm:gap-3 ${colors.textSecondary}`}>
-            <div className="p-1.5 sm:p-2 bg-linear-to-br from-sky-500 to-emerald-500 rounded-lg sm:rounded-xl shadow-lg shadow-sky-500/30">
+            <div className="p-1.5 sm:p-2 bg-linear-to-br from-red-500 to-orange-500 rounded-lg sm:rounded-xl shadow-lg shadow-red-500/30">
               <Film className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
             </div>
             <div className="flex items-center gap-2 sm:gap-4">
@@ -106,9 +96,9 @@ export function Topbar() {
                 <h1 className={`font-bold text-sm sm:text-lg ${colors.text}`}>Content Creator AI</h1>
                 <p className={`text-xs ${colors.textTertiary} font-medium hidden sm:block`}>Short-Form Video Assistant</p>
               </div>
-              <div className={`hidden lg:flex items-center gap-2 text-sm ${colors.textSecondary} ${colors.backgroundTertiary} px-3 py-1.5 rounded-full border ${colors.border}`}>
+              {/* <div className={`hidden lg:flex items-center gap-2 text-sm ${colors.textSecondary} ${colors.backgroundTertiary} px-3 py-1.5 rounded-full border ${colors.border}`}>
                 <span className="font-medium">Content Creator</span>
-              </div>
+              </div> */}
             </div>
           </div>
 
@@ -117,8 +107,8 @@ export function Topbar() {
             {/* Theme Selector */}
             <ThemeSelector />
             
-            {/* New Chat Button - Only for anonymous users */}
-            {!isAuthenticated && (
+            {/* New Chat Button removed - authentication required */}
+            {false && (
               <button
                 onClick={handleNewChat}
                 className={`flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20 dark:hover:bg-blue-900/40 transition-all duration-200 group border border-blue-200 dark:border-blue-700 hover:scale-105 hover:shadow-md cursor-pointer`}
@@ -149,7 +139,7 @@ export function Topbar() {
                         className="w-6 h-6 sm:w-8 sm:h-8 rounded-full object-cover ring-2 ring-white/20 group-hover:ring-white/40 transition-all"
                       />
                     ) : (
-                      <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-linear-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                      <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-linear-to-br from-red-500 to-orange-500 flex items-center justify-center">
                         <User className="h-3 w-3 sm:h-4 sm:w-4 text-white" />
                       </div>
                     )}
@@ -185,7 +175,7 @@ export function Topbar() {
                               className="w-10 h-10 rounded-full object-cover"
                             />
                           ) : (
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center">
                               <User className="h-5 w-5 text-white" />
                             </div>
                           )}
@@ -220,7 +210,7 @@ export function Topbar() {
                         onClick={handleSettingsClick}
                         className={`w-full flex items-center gap-3 px-4 py-3 ${colors.textSecondary} hover:${colors.backgroundTertiary} transition-colors group`}
                       >
-                        <div className={`p-1.5 rounded-lg ${colors.backgroundTertiary} group-hover:bg-purple-100 group-hover:text-purple-600 transition-colors`}>
+                        <div className={`p-1.5 rounded-lg ${colors.backgroundTertiary} group-hover:bg-green-100 group-hover:text-green-600 transition-colors`}>
                           <Settings className="h-4 w-4" />
                         </div>
                         <div className="text-left">

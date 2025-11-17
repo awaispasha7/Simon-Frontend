@@ -11,10 +11,18 @@ const config: Config = {
         extend: {
             colors: {
                 brand: {
-                    DEFAULT: '#645bb2',
-                    50: '#f0effa', 100: '#e6e4f7', 200: '#c9c4ee', 300: '#aca3e5',
-                    400: '#8f83dc', 500: '#7262d3', 600: '#645bb2', 700: '#4e4790',
-                    800: '#3a356c', 900: '#27244a'
+                    DEFAULT: '#ef4444', // Vibrant red for energy
+                    50: '#fef2f2', 100: '#fee2e2', 200: '#fecaca', 300: '#fca5a5',
+                    400: '#f87171', 500: '#ef4444', 600: '#dc2626', 700: '#b91c1c',
+                    800: '#991b1b', 900: '#7f1d1d'
+                },
+                fitness: {
+                    orange: '#f97316', // Vibrant orange for power
+                    red: '#ef4444', // Energy red
+                    green: '#22c55e', // Fresh green for health
+                    blue: '#3b82f6', // Calming blue for stability
+                    dark: '#1f2937', // Strong dark neutral
+                    light: '#f9fafb' // Clean light neutral
                 }
             },
             boxShadow: {

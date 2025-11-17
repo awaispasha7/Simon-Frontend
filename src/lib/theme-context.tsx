@@ -125,16 +125,16 @@ export const getThemeColors = (resolvedTheme: 'light' | 'dark') => {
       // Input colors
       inputBackground: 'bg-white',
       inputBorder: 'border-gray-300',
-      inputFocus: 'border-blue-500',
+      inputFocus: 'border-red-500',
       inputPlaceholder: 'placeholder-gray-400',
       
       // Button colors
-      buttonPrimary: 'bg-blue-600 hover:bg-blue-700 text-white',
+      buttonPrimary: 'bg-red-600 hover:bg-red-700 text-white',
       buttonSecondary: 'bg-gray-200 hover:bg-gray-300 text-gray-900',
       buttonGhost: 'hover:bg-gray-100 text-gray-700',
       
       // Message colors
-      messageUser: 'bg-blue-500 text-white',
+      messageUser: 'bg-orange-500 text-white',
       messageAssistant: 'bg-gray-100 text-gray-900',
       messageTimestamp: 'text-gray-500',
       
@@ -171,16 +171,16 @@ export const getThemeColors = (resolvedTheme: 'light' | 'dark') => {
       // Input colors
       inputBackground: 'bg-slate-800',
       inputBorder: 'border-slate-600',
-      inputFocus: 'border-sky-400',
+      inputFocus: 'border-red-400',
       inputPlaceholder: 'placeholder-slate-400',
       
       // Button colors
-      buttonPrimary: 'bg-sky-600 hover:bg-sky-700 text-white',
+      buttonPrimary: 'bg-red-600 hover:bg-red-700 text-white',
       buttonSecondary: 'bg-slate-700 hover:bg-slate-600 text-slate-200',
       buttonGhost: 'hover:bg-slate-800 text-slate-300',
       
       // Message colors
-      messageUser: 'bg-blue-500 text-white',
+      messageUser: 'bg-orange-500 text-white',
       messageAssistant: 'bg-slate-800 text-slate-100',
       messageTimestamp: 'text-slate-300',
       

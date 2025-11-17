@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { MessageBubble, BubbleProps } from './MessageBubble'
 import { Composer } from './Composer'
-import { useDossierRefresh } from '@/lib/dossier-context'
 import { useAuth } from '@/lib/auth-context'
 import { useSession } from '@/hooks/useSession'
 import { sessionSyncManager } from '@/lib/session-sync'
@@ -23,30 +22,21 @@ interface AttachedFile {
 
 interface ChatPanelProps {
   _sessionId?: string
-  _projectId?: string
-  onSessionUpdate?: (sessionId: string, projectId?: string) => void
-  onShowProjectModal?: () => void
+  onSessionUpdate?: (sessionId: string) => void
 }
 
-export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProjectModal }: ChatPanelProps) {
+export function ChatPanel({ _sessionId, onSessionUpdate }: ChatPanelProps) {
   const { user, isAuthenticated } = useAuth()
   const { 
     sessionId: hookSessionId, 
-    projectId: hookProjectId,
     isSessionExpired, 
-    getSessionInfo 
-  } = useSession(_sessionId, _projectId)
+    getSessionInfo,
+    createSession
+  } = useSession(_sessionId)
   const router = useRouter()
   const toast = useToast()
   
-  // Action button handlers for interactive chat buttons
-  const handleSignup = () => {
-    router.push('/auth/signup')
-  }
-
-  const handleLogin = () => {
-    router.push('/auth/login')
-  }
+  // Authentication required - no action buttons needed
 
   const handleNewStory = () => {
     // Reset completion states
@@ -65,7 +55,6 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProje
       }
       
       setCurrentSessionId('')
-      setCurrentProjectId('')
       sessionIdRef.current = ''
       
       // Reset messages to initial state
@@ -76,29 +65,9 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProje
         }
       ])
     } else {
-      // For anonymous users, show warning toast with options
-      toast.newChatWarning(
-        'Create New Chat?',
-        'If you create a new chat, your current chat data will be lost forever! To save and load chats, login/signup.',
-        () => {
-          // User confirmed - clear current session
-          setCurrentSessionId('')
-          setCurrentProjectId('')
-          sessionIdRef.current = ''
-          localStorage.removeItem('chat_session')
-          setMessages([
-            {
-              role: 'assistant',
-              content: "Hey! 👋 I'm your content creation assistant! Let's create some killer short-form videos for Instagram and TikTok. What topic are you passionate about sharing today?"
-            }
-          ])
-        },
-        undefined, // No cancel action needed
-        handleLogin, // Login button
-        handleSignup, // Signup button
-        'Continue',
-        'Cancel'
-      )
+      // Authentication required - redirect to login
+      router.push('/auth/login')
+      return
     }
   }
 
@@ -122,10 +91,6 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProje
     setEditAttachedFiles(attachedFiles || [])
     setEditMessageId(dbMessageId)
     
-    console.log('✏️ [EDIT] Edit message at index:', messageIndex, 'Content:', newContent)
-    console.log('✏️ [EDIT] Database message_id:', dbMessageId)
-    console.log('✏️ [EDIT] Edit attached files:', attachedFiles)
-    console.log('✏️ [EDIT] Messages will be trimmed when user sends the edited message')
   }
 
   const handleEditComplete = () => {
@@ -136,22 +101,8 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProje
     setEditMessageId(null)
   }
 
-  // Function to determine if a message should show action buttons
-  // This is now simpler and focused on AI responses that mention signup
-  const shouldShowActionButtons = (content: string, role: string) => {
-    if (role !== 'assistant') return false
-    if (isAuthenticated) return false // Don't show for authenticated users
-    
-    // Check for AI responses that mention signup/login
-    const signupKeywords = [
-      'sign up', 'signup', 'create account', 'register', 'unlimited content',
-      'multiple content', 'save your content', 'access your content',
-      'create unlimited content', 'sign up to create', 'register to access'
-    ]
-    
-    const contentLower = content.toLowerCase()
-    return signupKeywords.some(keyword => contentLower.includes(keyword))
-  }
+  // Action buttons removed - authentication required
+  const shouldShowActionButtons = () => false
   
   const [messages, setMessages] = useState<BubbleProps[]>([
     {
@@ -161,7 +112,7 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProje
   ])
   const [isLoading, setIsLoading] = useState(false)
   const [typingMessage, setTypingMessage] = useState('')
-  const [showSignInPrompt, setShowSignInPrompt] = useState(false)
+  // showSignInPrompt removed - authentication required
   const [isProcessingMessage, setIsProcessingMessage] = useState(false)
   const [showCompletion, setShowCompletion] = useState(false)
   const [storyCompleted, setStoryCompleted] = useState(false)
@@ -174,9 +125,8 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProje
   const [editAttachedFiles, setEditAttachedFiles] = useState<AttachedFile[]>([])
   const [editMessageId, setEditMessageId] = useState<string | null>(null) // Store database message_id for editing
   
-  // Local state to track current session and project for this chat
+  // Local state to track current session for this chat
   const [currentSessionId, setCurrentSessionId] = useState<string | undefined>(_sessionId || undefined)
-  const [currentProjectId, setCurrentProjectId] = useState<string | undefined>(_projectId || undefined)
   
   // Track previous session ID to detect changes
   const prevSessionIdRef = useRef<string | undefined>(_sessionId || undefined)
@@ -186,35 +136,13 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProje
   
   // Sync local state with props when they change
   // CRITICAL: Sync props to local state immediately when props change
-  // This ensures we use the correct project/session even if localStorage has stale data
+  // This ensures we use the correct session even if localStorage has stale data
   useEffect(() => {
     if (_sessionId && _sessionId !== currentSessionId) {
-      console.log('🔄 [CHAT] Syncing sessionId from props:', _sessionId)
       setCurrentSessionId(_sessionId)
       sessionIdRef.current = _sessionId
     }
-    if (_projectId && _projectId !== currentProjectId) {
-      console.log('🔄 [CHAT] Syncing projectId from props:', _projectId)
-      setCurrentProjectId(_projectId)
-      // Also update localStorage to match props (ensures consistency)
-      try {
-        const stored = localStorage.getItem('chat_session')
-        if (stored) {
-          const parsed = JSON.parse(stored)
-          if (parsed.projectId !== _projectId) {
-            parsed.projectId = _projectId
-            if (_sessionId) {
-              parsed.sessionId = _sessionId
-            }
-            localStorage.setItem('chat_session', JSON.stringify(parsed))
-            console.log('💾 [CHAT] Updated localStorage to match props')
-          }
-        }
-      } catch (e) {
-        console.error('Failed to sync localStorage with props:', e)
-      }
-    }
-  }, [_sessionId, _projectId])
+  }, [_sessionId])
 
   // Sync local state with localStorage session changes
   useEffect(() => {
@@ -224,29 +152,16 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProje
         if (stored) {
           const parsed = JSON.parse(stored)
           if (parsed.sessionId) {
-            console.log('🔄 [CHAT] Found session in localStorage:', parsed.sessionId)
-            
-            // For anonymous users, allow session restoration
-            if (!isAuthenticated) {
-              console.log('🔄 [DEMO] Anonymous user - allowing session restoration')
-            }
-            
-            // Only use localStorage session if no specific session/project was provided via props
-            // This prevents overriding when user clicks on a previous chat or creates a new project
-            if ((!_sessionId || _sessionId.trim() === '') && (!_projectId || _projectId.trim() === '')) {
+            // Only use localStorage session if no specific session was provided via props
+            // This prevents overriding when user clicks on a previous chat
+            if (!_sessionId || _sessionId.trim() === '') {
               setCurrentSessionId(parsed.sessionId)
               sessionIdRef.current = parsed.sessionId
-              if (parsed.projectId) {
-                setCurrentProjectId(parsed.projectId)
-              }
               
               // Notify parent component about the restored session
               if (onSessionUpdate) {
-                console.log('🔄 [CHAT] Notifying parent about restored session:', parsed.sessionId)
-                onSessionUpdate(parsed.sessionId, parsed.projectId)
+                onSessionUpdate(parsed.sessionId)
               }
-            } else {
-              console.log('🔄 [CHAT] Skipping localStorage session because specific session/project provided via props:', { sessionId: _sessionId, projectId: _projectId })
             }
           }
         }
@@ -261,10 +176,7 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProje
     // Listen for localStorage changes
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'chat_session') {
-        // For anonymous users, allow localStorage changes
-        if (!isAuthenticated) {
-          console.log('🔄 [DEMO] Anonymous user - allowing localStorage changes')
-        }
+        // Authentication required - no anonymous users
         
         // Only respond to storage changes if no specific session is provided via props
         if (!_sessionId || _sessionId.trim() === '') {
@@ -276,14 +188,11 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProje
     // Listen for custom session update events
     const handleSessionUpdate = (event: CustomEvent) => {
       console.log('🔄 [CHAT] Received session update event:', event.detail)
-      const { sessionId: newSessionId, projectId: newProjectId } = event.detail || {}
+      const { sessionId: newSessionId } = event.detail || {}
       if (newSessionId) {
         console.log('🔄 [CHAT] Updating session from event:', newSessionId)
         setCurrentSessionId(newSessionId)
         sessionIdRef.current = newSessionId
-        if (newProjectId) {
-          setCurrentProjectId(newProjectId)
-        }
       }
     }
 
@@ -297,8 +206,6 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProje
   }, [_sessionId, onSessionUpdate, isAuthenticated]) // Include missing dependencies
   
   const messagesEndRef = useRef<HTMLDivElement>(null)
-  const { triggerRefresh } = useDossierRefresh()
-  const dossierDispatchTimerRef = useRef<number | null>(null)
   // const _send = useChatStore(s => s.send) // Unused for now
 
   const scrollToBottom = () => {
@@ -323,18 +230,7 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProje
         return undefined
       })() : undefined)
       
-      const projectIdToUse = _projectId || hookProjectId || currentProjectId || (typeof window !== 'undefined' ? (() => {
-        try {
-          const stored = localStorage.getItem('chat_session')
-          if (stored) {
-            const parsed = JSON.parse(stored)
-            return parsed.projectId || undefined
-          }
-        } catch (e) {
-          console.error('Error reading localStorage:', e)
-        }
-        return undefined
-      })() : undefined)
+      // Projects removed - no projectId needed
       
       // Check if session ID has actually changed
       const currentSessionIdValue = sessionIdToUse || undefined
@@ -356,35 +252,67 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProje
         ])
         // Reset local session tracking for new chat  
         setCurrentSessionId(undefined)
-        setCurrentProjectId(undefined)
         prevSessionIdRef.current = undefined
         return
       }
       
       // Update local state with the session we're using
       setCurrentSessionId(sessionIdToUse || undefined)
-      setCurrentProjectId(projectIdToUse || undefined)
       
-      // For authenticated users with no session ID, create one immediately
+      // For authenticated users with no session ID, try to restore the most recent session
       if (isAuthenticated && user && !sessionIdToUse) {
-        const newSessionId = crypto.randomUUID()
-        setCurrentSessionId(newSessionId)
-        sessionIdRef.current = newSessionId
-        prevSessionIdRef.current = newSessionId
+        try {
+          const { sessionApi } = await import('@/lib/api')
+          const sessionsResponse = await sessionApi.getSessions(1) // Get the most recent session
+          const sessions = Array.isArray(sessionsResponse) 
+            ? sessionsResponse 
+            : (sessionsResponse && typeof sessionsResponse === 'object' && 'sessions' in sessionsResponse)
+              ? (sessionsResponse as { sessions: unknown[] }).sessions
+              : []
+          
+          if (sessions.length > 0 && sessions[0]?.session_id) {
+            const lastSessionId = sessions[0].session_id
+            console.log('🔄 [CHAT] Restoring last session:', lastSessionId)
+            setCurrentSessionId(lastSessionId)
+            sessionIdRef.current = lastSessionId
+            prevSessionIdRef.current = lastSessionId
+            
+            // Update localStorage
+            try {
+              localStorage.setItem('chat_session', JSON.stringify({
+                sessionId: lastSessionId,
+                userId: user.user_id,
+                isAuthenticated: true
+              }))
+            } catch (e) {
+              console.error('Failed to save session to localStorage:', e)
+            }
+            
+            // Continue to load messages for this session
+            // Don't return here, let it continue to load messages
+          } else {
+            // No previous session found - don't create one yet, wait for first message
+            console.log('📝 [CHAT] No previous session found. Will create session on first message.')
+            return
+          }
+        } catch (error) {
+          console.error('Failed to restore last session:', error)
+          // If we can't restore, don't create a new session - wait for first message
+          return
+        }
       }
 
       // If no session ID, don't load messages
-      if (!sessionIdToUse) {
-        console.log('🔄 [CHAT] No session ID available, skipping message load')
+      if (!sessionIdToUse && !currentSessionId) {
         return
       }
-
-      console.log('🔄 [CHAT] Loading messages for session:', sessionIdToUse)
+      
+      // Use the session ID we have (either from props, state, or restored)
+      const finalSessionId = sessionIdToUse || currentSessionId
 
       try {
         const { sessionApi } = await import('@/lib/api')
-        const messagesResponse = await sessionApi.getSessionMessages(sessionIdToUse, 50, 0)
-        console.log('📋 ChatPanel messages response:', messagesResponse)
+        const messagesResponse = await sessionApi.getSessionMessages(finalSessionId, 50, 0)
         
         // Handle backend response structure: { success: true, messages: [...] }
         const messages = (messagesResponse as { messages?: unknown[] })?.messages || []
@@ -404,16 +332,6 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProje
               // Extract attached files from metadata (where they're stored in the database)
               const attachedFiles = message.metadata?.attached_files || message.attached_files || []
               
-              console.log('📎 [CHAT] Loading message:', {
-                message_id: message.message_id,
-                role: message.role,
-                content: message.content?.substring(0, 50),
-                hasAttachedFiles: attachedFiles.length > 0,
-                attachedFilesCount: attachedFiles.length,
-                attachedFiles: attachedFiles.map(f => ({ name: f.name, type: f.type })),
-                timestamp: message.created_at
-              })
-              
               return {
                 role: message.role as 'user' | 'assistant',
                 content: message.content || '',
@@ -423,17 +341,9 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProje
               }
             })
             
-            console.log('📋 [CHAT] Formatted messages summary:', formattedMessages.map(m => ({
-              role: m.role,
-              hasFiles: m.attachedFiles?.length > 0,
-              fileCount: m.attachedFiles?.length || 0,
-              fileNames: m.attachedFiles?.map(f => f.name) || []
-            })))
-            
             setMessages(formattedMessages)
           } else {
             // Session exists but has no messages - show initial welcome message
-            console.log('📋 [CHAT] Session exists but has no messages - showing welcome message')
             setMessages([
               {
                 role: 'assistant',
@@ -443,7 +353,6 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProje
           }
         } else {
           // Invalid response format - show welcome message
-          console.log('📋 [CHAT] Invalid response format - showing welcome message')
           setMessages([
             {
               role: 'assistant',
@@ -462,13 +371,9 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProje
           
           if (status === 403 || status === 404) {
             // Session is invalid, let the sync manager handle it
-            console.log(`🚨 Session validation failed (${status}) - triggering sync cleanup`)
-            console.log(`🚨 Invalid session ID: ${currentSessionId}`)
-            
             // Clear the invalid session from localStorage immediately
             try {
               localStorage.removeItem('chat_session')
-              console.log('🧹 Cleared invalid session from localStorage')
             } catch (e) {
               console.error('Failed to clear session from localStorage:', e)
             }
@@ -481,7 +386,6 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProje
               }
             ])
             setCurrentSessionId('')
-            setCurrentProjectId('')
             sessionIdRef.current = ''
             
             // Trigger sync manager to clean up and find a valid session
@@ -492,17 +396,15 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProje
     }
 
     loadSessionMessages()
-  }, [_sessionId, _projectId, isAuthenticated, user?.user_id, currentSessionId, hookSessionId, hookProjectId, currentProjectId, user])
+  }, [_sessionId, isAuthenticated, user?.user_id, currentSessionId, hookSessionId, user])
 
   // Sync hook session values with local state
   useEffect(() => {
-    if (hookSessionId && hookProjectId) {
-      console.log('🔄 [CHAT] Syncing hook session values:', hookSessionId, hookProjectId)
+    if (hookSessionId) {
       setCurrentSessionId(hookSessionId)
-      setCurrentProjectId(hookProjectId)
       sessionIdRef.current = hookSessionId
     }
-  }, [hookSessionId, hookProjectId])
+  }, [hookSessionId])
 
   const getDynamicTypingMessage = (userMessage: string) => {
     const message = userMessage.toLowerCase()
@@ -560,14 +462,8 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProje
       return
     }
     
-    console.log('💬 [CHAT] handleSendMessage called with text:', text.substring(0, 50) + '...')
-    console.log('💬 [CHAT] isAuthenticated:', isAuthenticated, 'hookSessionId:', hookSessionId, 'hookProjectId:', hookProjectId)
-    console.log('💬 [CHAT] _sessionId prop:', _sessionId, '_projectId prop:', _projectId)
-    console.log('💬 [CHAT] currentSessionId state:', currentSessionId, 'currentProjectId state:', currentProjectId)
-    
     // Check if content is completed - show helpful prompt instead of sending message
     if (storyCompleted) {
-      console.log('📖 [CHAT] Content completed - showing prompt instead of sending message')
       
       // Add user message to UI
       const userMessage: BubbleProps = { 
@@ -594,9 +490,9 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProje
     
     setIsProcessingMessage(true)
 
-    // Check if session is expired for anonymous users
-    if (!isAuthenticated && isSessionExpired) {
-      setShowSignInPrompt(true)
+    // Authentication required - no anonymous users
+    if (!isAuthenticated) {
+      console.error('⚠️ Authentication required to send messages')
       return
     }
 
@@ -611,7 +507,6 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProje
     if (isEditing && editMessageIndex !== null) {
       const editedMessages = messages.slice(0, editMessageIndex)
       setMessages([...editedMessages, userMessage])
-      console.log('✏️ [EDIT] Replaced message at index', editMessageIndex, 'and removed', messages.length - editMessageIndex - 1, 'subsequent messages')
     } else {
       setMessages(prev => [...prev, userMessage])
     }
@@ -631,90 +526,64 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProje
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 60000) // 60 second timeout
       
-      // Use session info from useSession hook for both authenticated and anonymous users
-      let sessionId, projectId
-      if (isAuthenticated) {
-        // For authenticated users, prioritize props > local state > hook values
-        // This ensures that when a new project is created, messages go to the correct project
-        sessionId = _sessionId || currentSessionId || hookSessionId || sessionIdRef.current || (typeof window !== 'undefined' ? localStorage.getItem('anonymous_session_id') : null)
-        projectId = _projectId || currentProjectId || hookProjectId || (typeof window !== 'undefined' ? localStorage.getItem('anonymous_project_id') : null)
-      } else {
-        // For anonymous users, try multiple sources to find session data
-        // This ensures consistency with upload component
-        sessionId = hookSessionId || sessionIdRef.current || (typeof window !== 'undefined' ? localStorage.getItem('anonymous_session_id') : null)
-        projectId = hookProjectId || (typeof window !== 'undefined' ? localStorage.getItem('anonymous_project_id') : null)
-        
-        // If still no session, try to get from localStorage (for demo users)
-        if (!sessionId) {
-          try {
-            const stored = typeof window !== 'undefined' ? localStorage.getItem('chat_session') : null
-            if (stored) {
-              const parsed = JSON.parse(stored)
-              if (parsed.sessionId) {
-                sessionId = parsed.sessionId
-                projectId = parsed.projectId
-                console.log('💬 [CHAT] Restored session from localStorage for anonymous user:', sessionId)
-              }
-            }
-          } catch (error) {
-            console.error('Error parsing localStorage session:', error)
-          }
-        }
+      // REQUIRE AUTHENTICATION - use session info from authenticated user
+      if (!isAuthenticated) {
+        throw new Error('Authentication required to send messages')
       }
       
-      console.log('💬 [CHAT] Using sessionId:', sessionId, 'projectId:', projectId)
+      // For authenticated users, prioritize props > local state > hook values
+      let sessionId = _sessionId || currentSessionId || hookSessionId || sessionIdRef.current
       
-      // CRITICAL: For authenticated users, ensure we have a project_id before proceeding
-      if (isAuthenticated) {
-        if (!projectId) {
-          console.error('💬 [CHAT] ERROR: Authenticated user needs a project_id!')
-          console.error('💬 [CHAT] Available project sources:', {
-            hookProjectId,
-            currentProjectId,
-            propProjectId: _projectId,
-            localStorageProjectId: typeof window !== 'undefined' ? (() => {
-              try {
-                const stored = localStorage.getItem('chat_session')
-                if (stored) {
-                  const parsed = JSON.parse(stored)
-                  return parsed.projectId || null
-                }
-              } catch (e) {
-                return null
-              }
-              return null
-            })() : null
-          })
-          
-          // Show project creation modal instead of toast
-          if (onShowProjectModal) {
-            onShowProjectModal()
-          } else {
-            // Fallback to toast if callback not provided
-            toast.error(
-              'Project Required',
-              'Please create or select a project before sending messages. Use the "New Project" button in the sidebar.',
-              5000
-            )
-          }
-          setIsLoading(false)
-          setIsProcessingMessage(false)
-          setMessages(prev => prev.slice(0, -1)) // Remove the assistant message we just added
-          return
-        }
-      }
+      console.log('💬 [CHAT] Using sessionId:', sessionId)
       
-      // CRITICAL: Ensure we have a valid session before proceeding
+      // CRITICAL: Create session if none exists
       if (!sessionId) {
-        console.error('💬 [CHAT] ERROR: No session ID available! This will create a new session.')
-        console.error('💬 [CHAT] Available session sources:', {
-          hookSessionId,
-          sessionIdRef: sessionIdRef.current,
-          currentSessionId,
-          localStorageSession: typeof window !== 'undefined' ? localStorage.getItem('anonymous_session_id') : null
-        })
-        // Don't proceed without a session - this prevents creating new sessions
-        throw new Error('No session ID available - cannot send message')
+        console.log('💬 [CHAT] No session ID available, creating new session...')
+        
+        // Try to create a session
+        try {
+          await createSession()
+          // Wait a bit for the session to be created and state to update
+          await new Promise(resolve => setTimeout(resolve, 500))
+          
+          // Try to get the session ID again from various sources
+          sessionId = hookSessionId || sessionIdRef.current || currentSessionId
+          
+          // Check localStorage as a fallback
+          if (!sessionId) {
+            try {
+              const stored = localStorage.getItem('chat_session')
+              if (stored) {
+                const parsed = JSON.parse(stored)
+                if (parsed.sessionId) {
+                  sessionId = parsed.sessionId
+                  sessionIdRef.current = parsed.sessionId
+                  setCurrentSessionId(parsed.sessionId)
+                  console.log('💬 [CHAT] Retrieved session from localStorage:', parsed.sessionId)
+                }
+              }
+            } catch (e) {
+              console.error('Error reading localStorage:', e)
+            }
+          }
+          
+          if (!sessionId) {
+            throw new Error('Failed to create session - please try again')
+          }
+          
+          console.log('💬 [CHAT] Using newly created session:', sessionId)
+          
+          // Dispatch sessionCreated event to refresh sidebar
+          window.dispatchEvent(new CustomEvent('sessionCreated', { 
+            detail: { 
+              sessionId: sessionId
+            } 
+          }))
+          console.log('📡 Session created event dispatched:', sessionId)
+        } catch (error) {
+          console.error('💬 [CHAT] Failed to create session:', error)
+          throw new Error('Failed to create session - please try again')
+        }
       }
       
       // Get headers for the request
@@ -726,9 +595,6 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProje
       if (sessionId) {
         headers['X-Session-ID'] = sessionId
       }
-      if (projectId) {
-        headers['X-Project-ID'] = projectId
-      }
       if (user?.user_id) {
         headers['X-User-ID'] = user.user_id
       }
@@ -739,7 +605,6 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProje
         body: JSON.stringify({ 
           text,
           session_id: sessionId,
-          project_id: projectId,
           attached_files: attachedFiles || [],
           edit_from_message_id: (isEditing && editMessageId) ? editMessageId : undefined,
           enable_web_search: enableWebSearch || false
@@ -798,7 +663,7 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProje
                   break
                 }
               } else if (data.type === 'metadata') {
-                // Handle metadata chunk - store session_id and project_id for next message
+                // Handle metadata chunk - store session_id for next message
                 if (data.metadata?.session_id) {
                   // Update both state and ref immediately
                   setCurrentSessionId(data.metadata.session_id)
@@ -808,7 +673,6 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProje
                   try {
                     const sessionData = {
                       sessionId: data.metadata.session_id,
-                      projectId: data.metadata?.project_id,
                       isAuthenticated: isAuthenticated
                     }
                     
@@ -826,15 +690,14 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProje
                         setTimeout(() => {
                           window.dispatchEvent(new CustomEvent('sessionUpdated', { 
                             detail: { 
-                              sessionId: data.metadata.session_id,
-                              projectId: data.metadata?.project_id 
+                              sessionId: data.metadata.session_id
                             } 
                           }))
                           console.log('📡 Session update event dispatched:', data.metadata.session_id)
                           
                           // Also notify parent component if callback is provided
                           if (onSessionUpdate) {
-                            onSessionUpdate(data.metadata.session_id, data.metadata?.project_id)
+                            onSessionUpdate(data.metadata.session_id)
                           }
                         }, 50) // Small delay to ensure localStorage is fully written
                       } else {
@@ -846,9 +709,6 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProje
                   } catch (error) {
                     console.error('Failed to persist session:', error)
                   }
-                }
-                if (data.metadata?.project_id) {
-                  setCurrentProjectId(data.metadata.project_id)
                 }
               }
             } catch {
@@ -877,14 +737,7 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProje
       if (completed) {
         setShowCompletion(true)
         setStoryCompleted(true)
-        // try to read current dossier title from localStorage cache if present
-        try {
-          const stored = localStorage.getItem('dossier_snapshot')
-          if (stored) {
-            const snap = JSON.parse(stored)
-            if (snap && snap.title) setCompletedTitle(snap.title as string)
-          }
-        } catch {}
+        // Dossier functionality removed
       }
 
       if (assistantContent.trim() === '') {
@@ -929,29 +782,17 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProje
         handleEditComplete()
       }
       
-      // Trigger dossier refresh after AI response completes
-      // Debounce the dossierUpdated dispatch so it only fires once per message
-      if (dossierDispatchTimerRef.current) {
-        window.clearTimeout(dossierDispatchTimerRef.current)
-      }
-      dossierDispatchTimerRef.current = window.setTimeout(() => {
-        triggerRefresh()
-        try {
-          const stored = localStorage.getItem('chat_session')
-          const proj = (stored ? JSON.parse(stored)?.projectId : currentProjectId || hookProjectId || _projectId) || undefined
-          window.dispatchEvent(new CustomEvent('dossierUpdated', { detail: { projectId: proj } }))
-        } catch {}
-      }, 1600) // keep tight but avoid double-dispatches
+      // Dossier functionality removed - no refresh needed
     }
   }
 
 
   return (
-    <div className="flex flex-col h-full bg-linear-to-b from-white via-green-50/60 to-blue-50/40 relative overflow-hidden">
+    <div className="flex flex-col h-full bg-linear-to-b from-white via-green-50/60 to-red-50/40 relative overflow-hidden">
       {/* Animated Background Elements */}
       <div className="absolute inset-0 opacity-70 pointer-events-none">
         <div className="absolute -top-10 -left-10 w-56 h-56 bg-linear-to-br from-green-400/80 to-green-500/60 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-0 -right-10 w-48 h-48 bg-linear-to-br from-blue-400/70 to-blue-500/60 rounded-full blur-2xl animate-pulse delay-1000"></div>
+        <div className="absolute bottom-0 -right-10 w-48 h-48 bg-linear-to-br from-red-400/70 to-orange-500/60 rounded-full blur-2xl animate-pulse delay-1000"></div>
         <div className="absolute top-1/3 left-1/3 w-24 h-24 bg-linear-to-br from-red-400/70 to-red-500/60 rounded-full blur-2xl animate-pulse delay-500"></div>
       </div>
 
@@ -960,7 +801,7 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProje
         <div className="w-full px-6 py-4" key={currentSessionId || hookSessionId || _sessionId || 'no-session'}>
           {messages.length === 0 && !isLoading && (
             <div className="flex flex-col items-center justify-center h-full text-center py-12">
-              <div className="w-16 h-16 bg-linear-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center mb-6 shadow-lg">
+              <div className="w-16 h-16 bg-linear-to-br from-green-400 to-red-500 rounded-full flex items-center justify-center mb-6 shadow-lg">
                 <span className="text-2xl">🎬</span>
               </div>
               <h2 className="text-2xl font-bold text-gray-800 mb-3">Let's Create Viral Content! 🎬</h2>
@@ -973,50 +814,14 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProje
             </div>
           )}
 
-          {/* Sign-in Prompt for Anonymous Users */}
-          {showSignInPrompt && (
-            <div className="flex items-start gap-3 mb-6 animate-in slide-in-from-bottom-2 duration-300">
-              <div className="h-9 w-9 flex items-center justify-center shrink-0 mt-1 ml-4">
-                <div className="h-8 w-8 rounded-full bg-linear-to-br from-amber-200 to-orange-300 flex items-center justify-center">
-                  <span className="text-xs font-bold text-amber-800">⏰</span>
-                </div>
-              </div>
-              <div className="bg-linear-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-lg p-4 max-w-2xl">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-                  <span className="text-sm font-semibold text-amber-700">Session Expired</span>
-                </div>
-                <p className="text-sm text-amber-800 mb-3">
-                  Your anonymous session has expired. Sign in to save your content ideas and continue creating.
-                </p>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setShowSignInPrompt(false)}
-                    className="px-3 py-1 text-xs bg-amber-100 text-amber-700 rounded-md hover:bg-amber-200 transition-colors"
-                  >
-                    Continue Anonymously
-                  </button>
-                  <button
-                    onClick={() => {
-                      // TODO: Navigate to sign-in page
-                    }}
-                    className="px-3 py-1 text-xs bg-amber-600 text-white rounded-md hover:bg-amber-700 transition-colors"
-                  >
-                    Sign In
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
+          {/* Anonymous user prompt removed - authentication required */}
 
           {messages.map((message, index) => (
             <MessageBubble
               key={index}
               role={message.role}
               content={message.content}
-              showActionButtons={shouldShowActionButtons(message.content, message.role)}
-              onSignup={handleSignup}
-              onLogin={handleLogin}
+              showActionButtons={false}
               onNewStory={handleNewStory}
               attachedFiles={message.attachedFiles}
               onEdit={handleEditMessage}
@@ -1056,8 +861,7 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProje
                   <Composer 
                     onSend={handleSendMessage} 
                     disabled={isLoading || isProcessingMessage} 
-                    sessionId={isAuthenticated ? (currentSessionId || hookSessionId || undefined) : (hookSessionId || sessionIdRef.current || undefined)} 
-                    projectId={isAuthenticated ? (currentProjectId || hookProjectId || undefined) : (hookProjectId || (typeof window !== 'undefined' ? localStorage.getItem('anonymous_project_id') : null) || undefined)}
+                    sessionId={currentSessionId || hookSessionId || undefined}
                     editContent={editContent}
                     isEditing={isEditing}
                     onEditComplete={handleEditComplete}
@@ -1072,10 +876,6 @@ export function ChatPanel({ _sessionId, _projectId, onSessionUpdate, onShowProje
               title={completedTitle}
               onClose={() => setShowCompletion(false)}
               onNewStory={handleNewStory}
-              onViewDossier={() => {
-                // Simple hint; actual dossier panel is already visible in UI
-                setShowCompletion(false)
-              }}
             />
     </div>
   )

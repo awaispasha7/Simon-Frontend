@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
+import Image from 'next/image'
 
 export default function Home() {
   const { isLoading, isAuthenticated } = useAuth()
@@ -22,12 +23,19 @@ export default function Home() {
 
   // Show loading while checking authentication
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-green-50">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 via-white to-orange-50 animate-in fade-in duration-500">
       <div className="text-center">
-        <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-green-500 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
-          <span className="text-2xl text-white font-bold">SW</span>
+        <div className="relative w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 overflow-hidden bg-white shadow-lg animate-bounce-slow">
+          <div className="absolute inset-0 rounded-full border-2 border-red-500/30 animate-spin-slow"></div>
+          <Image
+            src="/agent-logo.svg"
+            alt="Simon's Chatbot"
+            width={64}
+            height={64}
+            className="w-full h-full object-contain animate-pulse-slow"
+          />
         </div>
-        <p className="text-gray-600">Loading...</p>
+        <p className="text-gray-600 font-medium animate-pulse">Simon's Chatbot</p>
       </div>
     </div>
   )

@@ -21,14 +21,13 @@ interface ComposerProps {
   onSend: (message: string, attachedFiles?: AttachedFile[], enableWebSearch?: boolean) => void
   disabled?: boolean
   sessionId?: string
-  projectId?: string
   editContent?: string
   isEditing?: boolean
   onEditComplete?: () => void
   editAttachedFiles?: AttachedFile[]
 }
 
-export function Composer({ onSend, disabled = false, sessionId, projectId, editContent, isEditing, onEditComplete, editAttachedFiles }: ComposerProps) {
+export function Composer({ onSend, disabled = false, sessionId, editContent, isEditing, onEditComplete, editAttachedFiles }: ComposerProps) {
   const [text, setText] = useState('')
   const [showAudioRecorder, setShowAudioRecorder] = useState(false)
   const [isSmallScreen, setIsSmallScreen] = useState(false)
@@ -42,7 +41,7 @@ export function Composer({ onSend, disabled = false, sessionId, projectId, editC
   // Check screen size for responsive placeholder and height
   useEffect(() => {
     const checkScreenSize = () => {
-      setIsSmallScreen(window.innerWidth < 320)
+      setIsSmallScreen(window.innerWidth < 350)
       setIsLargeScreen(window.innerWidth >= 640) // sm breakpoint
     }
     
@@ -103,7 +102,7 @@ export function Composer({ onSend, disabled = false, sessionId, projectId, editC
 
   const handleAudioData = (audioBlob: Blob, transcript: string) => {
     console.log('🎤 [COMPOSER] handleAudioData called with transcript:', transcript.substring(0, 50) + '...')
-    console.log('🎤 [COMPOSER] Current sessionId:', sessionId, 'projectId:', projectId)
+    console.log('🎤 [COMPOSER] Current sessionId:', sessionId)
     setShowAudioRecorder(false)
     // Auto-send the transcribed text and clear the input
     if (transcript.trim()) {
@@ -134,7 +133,7 @@ export function Composer({ onSend, disabled = false, sessionId, projectId, editC
   // }, [text])
 
   return (
-    <div className="p-2 sm:p-3">
+    <div className={cn("p-1 sm:p-2 md:p-3", isSmallScreen && "p-0.5")}>
       {/* Attachment Preview - Above the composer */}
       {attachedFiles.length > 0 && (
         <div className="mb-3">
@@ -142,8 +141,13 @@ export function Composer({ onSend, disabled = false, sessionId, projectId, editC
         </div>
       )}
       
-      <div className={`relative flex items-center backdrop-blur-sm rounded-t-none rounded-b-2xl p-1.5 sm:p-2 md:p-3 border ${colors.glassBorder} shadow-lg overflow-visible`} style={{ backgroundColor: resolvedTheme === 'light' ? 'rgba(255, 255, 255, 0.8)' : 'rgb(83, 93, 108)' }}>
-          <UploadDropzone sessionId={sessionId} projectId={projectId} onFileAttached={handleFileAttached} />
+      <div className={cn(
+        "relative flex items-center backdrop-blur-sm rounded-t-none rounded-b-2xl border",
+        colors.glassBorder,
+        "shadow-lg overflow-visible",
+        isSmallScreen ? "p-1" : "p-1.5 sm:p-2 md:p-3"
+      )} style={{ backgroundColor: resolvedTheme === 'light' ? 'rgba(255, 255, 255, 0.8)' : 'rgb(83, 93, 108)' }}>
+          <UploadDropzone sessionId={sessionId} onFileAttached={handleFileAttached} />
           
           {/* Globe icon toggle for web search */}
           <button
@@ -154,8 +158,8 @@ export function Composer({ onSend, disabled = false, sessionId, projectId, editC
               "h-10 w-10 sm:h-[56px] sm:w-[56px] hover:scale-105 active:scale-95 transition-all duration-200 rounded-lg sm:rounded-xl border-2 shadow-sm hover:shadow-md flex items-center justify-center backdrop-blur-sm shrink-0",
               enableWebSearch
                 ? resolvedTheme === 'light'
-                  ? "border-blue-500 bg-blue-50 hover:bg-blue-100"
-                  : "border-sky-400 bg-sky-900/30 hover:bg-sky-900/50"
+                  ? "border-red-500 bg-red-50 hover:bg-red-100"
+                  : "border-red-400 bg-red-900/30 hover:bg-red-900/50"
                 : resolvedTheme === 'light'
                   ? "border-gray-300 bg-white hover:border-gray-400 hover:bg-gray-50"
                   : "border-slate-600 bg-slate-800 hover:border-slate-500 hover:bg-slate-700",
@@ -166,28 +170,26 @@ export function Composer({ onSend, disabled = false, sessionId, projectId, editC
                 ? resolvedTheme === 'light' ? '#eff6ff' : 'rgba(14, 165, 233, 0.2)'
                 : resolvedTheme === 'light' ? 'white' : 'rgb(83, 93, 108)',
               borderColor: enableWebSearch
-                ? resolvedTheme === 'light' ? '#3b82f6' : '#0ea5e9'
+                ? resolvedTheme === 'light' ? '#ef4444' : '#f97316'
                 : resolvedTheme === 'light' ? '#d1d5db' : '#475569',
-              width: isLargeScreen ? '56px' : '40px',
-              height: isLargeScreen ? '56px' : '40px',
-              minWidth: isLargeScreen ? '56px' : '40px',
-              minHeight: isLargeScreen ? '56px' : '40px',
+              width: isLargeScreen ? '56px' : isSmallScreen ? '32px' : '40px',
+              height: isLargeScreen ? '56px' : isSmallScreen ? '32px' : '40px',
+              minWidth: isLargeScreen ? '56px' : isSmallScreen ? '32px' : '40px',
+              minHeight: isLargeScreen ? '56px' : isSmallScreen ? '32px' : '40px',
               transition: 'all 0.2s ease'
             }}
             title={enableWebSearch ? "Web search enabled - Click to disable" : "Web search disabled - Click to enable"}
           >
             <Globe 
-              className="h-4 w-4 sm:h-5 sm:w-5 transition-colors"
+              className={cn("transition-colors", isSmallScreen ? "h-3 w-3" : "h-4 w-4 sm:h-5 sm:w-5")}
               style={{
                 color: enableWebSearch
-                  ? resolvedTheme === 'light' ? '#3b82f6' : '#0ea5e9'
+                  ? resolvedTheme === 'light' ? '#ef4444' : '#f97316'
                   : resolvedTheme === 'light' ? '#6b7280' : '#94a3b8',
                 strokeWidth: enableWebSearch ? 2.5 : 2
               }}
             />
           </button>
-          
-          <div className="w-1"></div>
           
           <div className="relative">
             {!showAudioRecorder ? (
@@ -201,24 +203,24 @@ export function Composer({ onSend, disabled = false, sessionId, projectId, editC
                 className={cn(
                   "h-10 w-10 sm:h-[56px] sm:w-[56px] hover:scale-105 active:scale-95 transition-all duration-200 rounded-lg sm:rounded-xl border-2 border-dashed shadow-sm hover:shadow-md flex items-center justify-center backdrop-blur-sm shrink-0",
                   resolvedTheme === 'light' 
-                    ? "border-gray-400 bg-white hover:border-blue-500 hover:bg-gray-50" 
-                    : "border-slate-500 bg-slate-800 hover:border-sky-400 hover:bg-slate-700",
+                    ? "border-gray-400 bg-white hover:border-red-500 hover:bg-gray-50" 
+                    : "border-slate-500 bg-slate-800 hover:border-red-400 hover:bg-slate-700",
                   disabled && "opacity-50 cursor-not-allowed"
                 )}
                 style={{
                   backgroundColor: resolvedTheme === 'light' ? 'white' : 'rgb(83, 93, 108)',
                   borderColor: resolvedTheme === 'light' ? '#9ca3af' : '#64748b',
-                  width: isLargeScreen ? '56px' : '40px',
-                  height: isLargeScreen ? '56px' : '40px',
-                  minWidth: isLargeScreen ? '56px' : '40px',
-                  minHeight: isLargeScreen ? '56px' : '40px',
+                  width: isLargeScreen ? '56px' : isSmallScreen ? '32px' : '40px',
+                  height: isLargeScreen ? '56px' : isSmallScreen ? '32px' : '40px',
+                  minWidth: isLargeScreen ? '56px' : isSmallScreen ? '32px' : '40px',
+                  minHeight: isLargeScreen ? '56px' : isSmallScreen ? '32px' : '40px',
                   transition: 'all 0.2s ease'
                 }}
                 onMouseEnter={(e) => {
                   if (resolvedTheme === 'dark') {
-                    e.currentTarget.style.borderColor = '#0ea5e9' // sky-400
+                    e.currentTarget.style.borderColor = '#f97316' // orange-500
                   } else {
-                    e.currentTarget.style.borderColor = '#3b82f6' // blue-500
+                    e.currentTarget.style.borderColor = '#ef4444' // red-500
                   }
                 }}
                 onMouseLeave={(e) => {
@@ -230,7 +232,7 @@ export function Composer({ onSend, disabled = false, sessionId, projectId, editC
                 }}
               >
                 <Mic 
-                  className="h-4 w-4 sm:h-5 sm:w-5 transition-colors"
+                  className={cn("transition-colors", isSmallScreen ? "h-3 w-3" : "h-4 w-4 sm:h-5 sm:w-5")}
                   style={{
                     color: resolvedTheme === 'light' ? '#374151' : '#e2e8f0',
                     strokeWidth: 2
@@ -243,11 +245,10 @@ export function Composer({ onSend, disabled = false, sessionId, projectId, editC
                 onAudioData={handleAudioData}
                 onClose={() => setShowAudioRecorder(false)}
                 sessionId={sessionId}
-                projectId={projectId}
               />
             )}
           </div>
-          <div className="w-1"></div>
+          <div className="w-1.5 sm:w-2"></div>
             <textarea
             ref={textareaRef}
             value={text}
@@ -263,16 +264,18 @@ export function Composer({ onSend, disabled = false, sessionId, projectId, editC
               disabled && "opacity-50 cursor-not-allowed"
             )}
             style={{
-              caretColor: '#3b82f6',
+              caretColor: '#ef4444',
               cursor: 'text',
               outline: 'none',
               textAlign: 'left',
               lineHeight: '1.4',
-              height: isLargeScreen ? '56px' : '40px', // sm:h-[56px] equivalent
-              minHeight: isLargeScreen ? '56px' : '40px',
-              maxHeight: isLargeScreen ? '56px' : '40px',
-              paddingTop: isLargeScreen ? '16px' : '12px',
-              paddingBottom: isLargeScreen ? '16px' : '12px',
+              height: isLargeScreen ? '56px' : isSmallScreen ? '32px' : '40px',
+              minHeight: isLargeScreen ? '56px' : isSmallScreen ? '32px' : '40px',
+              maxHeight: isLargeScreen ? '56px' : isSmallScreen ? '32px' : '40px',
+              paddingTop: isLargeScreen ? '16px' : isSmallScreen ? '8px' : '12px',
+              paddingBottom: isLargeScreen ? '16px' : isSmallScreen ? '8px' : '12px',
+              paddingLeft: isSmallScreen ? '8px' : undefined,
+              paddingRight: isSmallScreen ? '8px' : undefined,
               boxSizing: 'border-box',
               overflow: 'hidden',
               resize: 'none',
@@ -290,8 +293,8 @@ export function Composer({ onSend, disabled = false, sessionId, projectId, editC
                 "bg-gray-500 hover:bg-gray-600 hover:scale-110 active:scale-95 hover:shadow-2xl cursor-pointer shadow-gray-500/50"
               )}
               style={{ 
-                width: isLargeScreen ? '56px' : '40px',
-                height: isLargeScreen ? '56px' : '40px',
+                width: isLargeScreen ? '56px' : isSmallScreen ? '32px' : '40px',
+                height: isLargeScreen ? '56px' : isSmallScreen ? '32px' : '40px',
                 borderRadius: '30%',
                 boxShadow: '0 4px 14px 0 rgba(107, 114, 128, 0.3)',
                 border: 'none',
@@ -320,7 +323,7 @@ export function Composer({ onSend, disabled = false, sessionId, projectId, editC
               title="Cancel edit"
             >
               <svg 
-                className="h-4 w-4" 
+                className={cn(isSmallScreen ? "h-3 w-3" : "h-4 w-4")}
                 fill="none" 
                 stroke="currentColor" 
                 viewBox="0 0 24 24"
@@ -339,30 +342,30 @@ export function Composer({ onSend, disabled = false, sessionId, projectId, editC
                 "rounded-full transition-all duration-300 shadow-xl flex items-center justify-center shrink-0 relative",
                 (!text.trim() && attachedFiles.length === 0) || disabled
                   ? resolvedTheme === 'light' 
-                    ? "bg-white cursor-not-allowed shadow-sky-200/50"
+                    ? "bg-white cursor-not-allowed shadow-red-200/50"
                     : "bg-[rgb(83,93,108)] cursor-not-allowed shadow-slate-500/50"
-                  : "bg-linear-to-br from-blue-500 via-blue-600 to-blue-700 hover:from-blue-600 hover:to-blue-800 hover:scale-110 active:scale-95 hover:shadow-2xl cursor-pointer shadow-blue-500/50"
+                  : "bg-linear-to-br from-red-500 via-orange-600 to-orange-700 hover:from-red-600 hover:to-orange-800 hover:scale-110 active:scale-95 hover:shadow-2xl cursor-pointer shadow-red-500/50"
               )}
               style={{ 
-                width: isLargeScreen ? '56px' : '40px',
-                height: isLargeScreen ? '56px' : '40px',
+                width: isLargeScreen ? '56px' : isSmallScreen ? '32px' : '40px',
+                height: isLargeScreen ? '56px' : isSmallScreen ? '32px' : '40px',
                 border: !text.trim() || disabled 
                   ? resolvedTheme === 'light' 
-                    ? '2px solid #0ea5e9' 
+                    ? '2px solid #ef4444' 
                     : '2px solid #64748b'
                   : 'none',
                 borderRadius: '30%',
                 boxShadow: !text.trim() || disabled 
                   ? resolvedTheme === 'light'
-                    ? '0 4px 14px 0 rgba(14, 165, 233, 0.3)'
+                    ? '0 4px 14px 0 rgba(239, 68, 68, 0.3)'
                     : '0 4px 14px 0 rgba(100, 116, 139, 0.3)'
-                  : '0 4px 14px 0 rgba(96, 165, 250, 0.4)'
+                  : '0 4px 14px 0 rgba(239, 68, 68, 0.4)'
               }}
           >
             {disabled ? (
               <Loader2 className={cn(
                 "h-6 w-6 sm:h-7 sm:w-7 animate-spin drop-shadow-xl",
-                resolvedTheme === 'light' ? "text-sky-500" : "text-slate-400"
+                resolvedTheme === 'light' ? "text-red-500" : "text-slate-400"
               )} style={{
                 position: 'absolute',
                 top: '50%',
@@ -373,11 +376,12 @@ export function Composer({ onSend, disabled = false, sessionId, projectId, editC
               }} />
             ) : !text.trim() ? (
               <Send className={cn(
-                "h-4 w-4 sm:h-5 sm:w-5 drop-shadow-xl",
-                resolvedTheme === 'light' ? "text-sky-500" : "text-slate-400"
+                "drop-shadow-xl",
+                isSmallScreen ? "h-3 w-3" : "h-4 w-4 sm:h-5 sm:w-5",
+                resolvedTheme === 'light' ? "text-red-500" : "text-slate-400"
               )} />
             ) : (
-              <Send className="h-4 w-4 sm:h-5 sm:w-5 text-white drop-shadow-xl" />
+              <Send className={cn("text-white drop-shadow-xl", isSmallScreen ? "h-3 w-3" : "h-4 w-4 sm:h-5 sm:w-5")} />
             )}
           </button>
         </div>
