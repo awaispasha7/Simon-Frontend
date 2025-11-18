@@ -2,30 +2,33 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(req: NextRequest) {
   try {
-    const formData = await req.formData()
-    
     // Get the backend URL from environment variables
     const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'
     
     console.log(`Frontend API: Forwarding transcription request to backend at ${backendUrl}/transcribe`)
 
-    // Reconstruct FormData to ensure proper boundary handling
-    const audioFile = formData.get('audio_file') as File
-    if (!audioFile) {
+    // Get the Content-Type header from the original request (includes boundary)
+    const contentType = req.headers.get('content-type')
+    
+    if (!contentType || !contentType.includes('multipart/form-data')) {
       return NextResponse.json(
-        { error: 'No audio file provided' },
+        { error: 'Invalid content type. Expected multipart/form-data' },
         { status: 400 }
       )
     }
 
-    // Create new FormData with the file
-    const backendFormData = new FormData()
-    backendFormData.append('audio_file', audioFile, audioFile.name || 'recording.webm')
+    // Forward the raw request body directly to preserve the boundary
+    // This avoids any FormData parsing/serialization issues
+    const requestBody = await req.arrayBuffer()
+    
+    console.log(`Frontend API: Forwarding ${requestBody.byteLength} bytes with content-type: ${contentType}`)
     
     const response = await fetch(`${backendUrl}/transcribe`, {
       method: 'POST',
-      body: backendFormData,
-      // Don't set Content-Type - fetch will set it automatically with correct boundary
+      body: requestBody,
+      headers: {
+        'Content-Type': contentType, // Preserve the original boundary
+      },
     })
 
     if (!response.ok) {
