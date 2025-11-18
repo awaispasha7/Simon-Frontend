@@ -172,7 +172,7 @@ export function AudioRecorder({ onAudioData, onClose, sessionId }: AudioRecorder
       const formData = new FormData()
       formData.append('audio_file', audioBlob, 'recording.webm')
       
-      const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'
+      const backendUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000').replace(/\/$/, '')
       console.log('🎤 [AUDIO] Sending directly to backend:', `${backendUrl}/transcribe`)
       
       const response = await fetch(`${backendUrl}/transcribe`, {
