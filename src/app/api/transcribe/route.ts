@@ -10,34 +10,52 @@ export async function POST(req: NextRequest) {
     
     console.log(`🎤 [${requestId}] Backend URL: ${backendUrl}`)
     
-    // Get the original Content-Type header (includes the boundary)
-    const contentType = req.headers.get('content-type')
-    console.log(`🎤 [${requestId}] Original Content-Type: ${contentType}`)
+    // Parse FormData and reconstruct it (like the upload route does)
+    console.log(`🎤 [${requestId}] Parsing incoming FormData...`)
+    const formData = await req.formData()
+    console.log(`🎤 [${requestId}] FormData parsed successfully`)
     
-    if (!contentType || !contentType.includes('multipart/form-data')) {
-      console.error(`🎤 [${requestId}] ❌ Invalid Content-Type: ${contentType}`)
+    const audioFile = formData.get('audio_file') as File | null
+    
+    if (!audioFile) {
+      console.error(`🎤 [${requestId}] ❌ No audio file found in FormData`)
       return NextResponse.json(
-        { error: 'Invalid content type. Expected multipart/form-data' },
+        { error: 'No audio file provided' },
         { status: 400 }
       )
     }
 
-    // Forward the raw request body directly to preserve the multipart boundary
-    // This is the only reliable way to forward multipart data in serverless environments
-    console.log(`🎤 [${requestId}] Reading raw request body...`)
-    const requestBody = await req.arrayBuffer()
-    console.log(`🎤 [${requestId}] Request body size: ${requestBody.byteLength} bytes`)
+    console.log(`🎤 [${requestId}] Audio file details:`, {
+      name: audioFile.name,
+      size: audioFile.size,
+      type: audioFile.type,
+    })
+
+    // Create new FormData for backend (like upload route)
+    console.log(`🎤 [${requestId}] Creating new FormData for backend...`)
+    const backendFormData = new FormData()
+    backendFormData.append('audio_file', audioFile, audioFile.name || 'recording.webm')
+    console.log(`🎤 [${requestId}] Backend FormData created`)
 
     console.log(`🎤 [${requestId}] Sending request to backend: ${backendUrl}/transcribe`)
     const fetchStartTime = Date.now()
-    
-    const response = await fetch(`${backendUrl}/transcribe`, {
-      method: 'POST',
-      body: requestBody,
-      headers: {
-        'Content-Type': contentType, // Preserve the original boundary
-      },
-    })
+    let response: Response
+    try {
+      response = await fetch(`${backendUrl}/transcribe`, {
+        method: 'POST',
+        body: backendFormData,
+        // Don't set Content-Type - fetch will set it automatically with correct boundary
+      })
+      console.log(`🎤 [${requestId}] ✅ Fetch completed`)
+    } catch (fetchError) {
+      console.error(`🎤 [${requestId}] ❌❌❌ FETCH FAILED ❌❌❌`)
+      console.error(`🎤 [${requestId}] Fetch error type:`, fetchError instanceof Error ? fetchError.constructor.name : typeof fetchError)
+      console.error(`🎤 [${requestId}] Fetch error message:`, fetchError instanceof Error ? fetchError.message : String(fetchError))
+      console.error(`🎤 [${requestId}] Fetch error stack:`, fetchError instanceof Error ? fetchError.stack : 'No stack')
+      console.error(`🎤 [${requestId}] Backend URL attempted: ${backendUrl}/transcribe`)
+      console.error(`🎤 [${requestId}] Audio file: ${audioFile.name} (${audioFile.size} bytes)`)
+      throw fetchError
+    }
     
     const fetchDuration = Date.now() - fetchStartTime
     console.log(`🎤 [${requestId}] Backend response received in ${fetchDuration}ms`)
