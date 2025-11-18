@@ -660,6 +660,28 @@ export function ChatPanel({ _sessionId, onSessionUpdate }: ChatPanelProps) {
       let assistantContent = ''
       let streamComplete = false
 
+      // Function to simulate word-by-word display
+      const displayWordsGradually = async (fullText: string) => {
+        const words = fullText.split(' ')
+        let displayedText = ''
+        
+        for (let i = 0; i < words.length; i++) {
+          displayedText += (i > 0 ? ' ' : '') + words[i]
+          
+          setMessages(prev => {
+            const newMessages = [...prev]
+            newMessages[newMessages.length - 1] = {
+              role: 'assistant',
+              content: displayedText
+            }
+            return newMessages
+          })
+          
+          // Small delay between words for typing effect
+          await new Promise(resolve => setTimeout(resolve, 50))
+        }
+      }
+
       while (!streamComplete) {
         const { done, value } = await reader.read()
         
@@ -677,22 +699,32 @@ export function ChatPanel({ _sessionId, onSessionUpdate }: ChatPanelProps) {
               const data = JSON.parse(line.slice(6))
               
               if (data.type === 'content') {
-                assistantContent += data.content
-                
-                // Update the last message (assistant message) with new content
-                setMessages(prev => {
-                  const newMessages = [...prev]
-                  newMessages[newMessages.length - 1] = {
-                    role: 'assistant',
-                    content: assistantContent
-                  }
-                  return newMessages
-                })
-                
-                // Check if this is the final chunk
-                if (data.done) {
+                // Check if we should stream word-by-word
+                if (data.stream_words && data.content) {
+                  assistantContent = data.content
+                  // Display word-by-word with animation
+                  await displayWordsGradually(data.content)
                   streamComplete = true
                   break
+                } else {
+                  // Legacy streaming (word-by-word from backend)
+                  assistantContent += data.content
+                  
+                  // Update the last message (assistant message) with new content
+                  setMessages(prev => {
+                    const newMessages = [...prev]
+                    newMessages[newMessages.length - 1] = {
+                      role: 'assistant',
+                      content: assistantContent
+                    }
+                    return newMessages
+                  })
+                  
+                  // Check if this is the final chunk
+                  if (data.done) {
+                    streamComplete = true
+                    break
+                  }
                 }
               } else if (data.type === 'metadata') {
                 // Handle metadata chunk - store session_id for next message
