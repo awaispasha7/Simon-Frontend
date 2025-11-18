@@ -168,12 +168,14 @@ export function AudioRecorder({ onAudioData, onClose, sessionId }: AudioRecorder
     setState('transcribing')
     
     try {
-      // Send audio to backend for transcription
+      // Send audio DIRECTLY to backend - bypass Next.js API route to avoid multipart boundary issues
       const formData = new FormData()
       formData.append('audio_file', audioBlob, 'recording.webm')
       
-      console.log('🎤 [AUDIO] Sending to /api/transcribe')
-      const response = await fetch('/api/transcribe', {
+      const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'
+      console.log('🎤 [AUDIO] Sending directly to backend:', `${backendUrl}/transcribe`)
+      
+      const response = await fetch(`${backendUrl}/transcribe`, {
         method: 'POST',
         body: formData,
       })
