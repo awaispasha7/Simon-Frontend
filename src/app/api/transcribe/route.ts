@@ -2,16 +2,36 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(req: NextRequest) {
   try {
-    const formData = await req.formData()
-    
     // Get the backend URL from environment variables
     const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'
     
     console.log(`Frontend API: Forwarding transcription request to backend at ${backendUrl}/transcribe`)
 
+    // Parse the incoming FormData
+    const formData = await req.formData()
+    const audioFile = formData.get('audio_file') as File | null
+    
+    if (!audioFile) {
+      return NextResponse.json(
+        { error: 'No audio file provided' },
+        { status: 400 }
+      )
+    }
+
+    // Read the file as ArrayBuffer to reconstruct it properly for serverless
+    const fileBuffer = await audioFile.arrayBuffer()
+    
+    // Create a new FormData with the file blob for the backend
+    const backendFormData = new FormData()
+    const fileBlob = new Blob([fileBuffer], { type: audioFile.type || 'audio/webm' })
+    backendFormData.append('audio_file', fileBlob, audioFile.name || 'recording.webm')
+    
+    console.log(`Frontend API: Forwarding file: ${audioFile.name}, size: ${fileBuffer.byteLength} bytes, type: ${audioFile.type}`)
+
     const response = await fetch(`${backendUrl}/transcribe`, {
       method: 'POST',
-      body: formData, // Forward FormData directly
+      body: backendFormData,
+      // Don't set Content-Type - fetch will set it automatically with correct boundary
     })
 
     if (!response.ok) {
