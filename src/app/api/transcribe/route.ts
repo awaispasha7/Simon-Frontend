@@ -9,9 +9,23 @@ export async function POST(req: NextRequest) {
     
     console.log(`Frontend API: Forwarding transcription request to backend at ${backendUrl}/transcribe`)
 
+    // Reconstruct FormData to ensure proper boundary handling
+    const audioFile = formData.get('audio_file') as File
+    if (!audioFile) {
+      return NextResponse.json(
+        { error: 'No audio file provided' },
+        { status: 400 }
+      )
+    }
+
+    // Create new FormData with the file
+    const backendFormData = new FormData()
+    backendFormData.append('audio_file', audioFile, audioFile.name || 'recording.webm')
+    
     const response = await fetch(`${backendUrl}/transcribe`, {
       method: 'POST',
-      body: formData, // Forward FormData directly
+      body: backendFormData,
+      // Don't set Content-Type - fetch will set it automatically with correct boundary
     })
 
     if (!response.ok) {
