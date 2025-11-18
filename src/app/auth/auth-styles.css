@@ -33,6 +33,13 @@
   overflow: hidden;
 }
 
+/* Dark mode card adjustments */
+.dark .auth-card {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
 .auth-card::before {
   content: '';
   position: absolute;
@@ -76,6 +83,18 @@
   font-weight: 400;
 }
 
+/* Dark mode title and subtitle */
+.dark .auth-title {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.dark .auth-subtitle {
+  color: rgba(255, 255, 255, 0.9);
+}
+
 /* Form Group & Input Styles */
 .auth-form-group {
   margin-bottom: 24px;
@@ -102,6 +121,17 @@
   backdrop-filter: blur(10px);
 }
 
+/* Dark mode input adjustments */
+.dark .auth-input {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.dark .auth-input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
 .auth-input::placeholder {
   color: transparent;
 }
@@ -118,12 +148,24 @@
   transform-origin: left top;
 }
 
+/* Dark mode label */
+.dark .auth-label {
+  color: rgba(255, 255, 255, 0.8);
+}
+
 .auth-input:focus,
 .auth-input:not(:placeholder-shown) {
   border-color: #ef4444;
   background: rgba(255, 255, 255, 0.15);
   transform: translateY(-2px);
   box-shadow: 0 8px 25px rgba(239, 68, 68, 0.3);
+}
+
+/* Dark mode input focus */
+.dark .auth-input:focus,
+.dark .auth-input:not(:placeholder-shown) {
+  background: rgba(0, 0, 0, 0.4);
+  box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
 }
 
 .auth-input:focus + .auth-label,
@@ -272,6 +314,11 @@
   gap: 8px;
 }
 
+/* Dark mode checkbox label */
+.dark .auth-checkbox-label {
+  color: rgba(255, 255, 255, 0.95);
+}
+
 .auth-checkmark {
   width: 18px;
   height: 18px;
@@ -284,6 +331,12 @@
   flex-shrink: 0;
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
+}
+
+/* Dark mode checkmark */
+.dark .auth-checkmark {
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  background: rgba(0, 0, 0, 0.3);
 }
 
 .auth-remember-wrapper input[type="checkbox"]:checked ~ .auth-checkbox-label .auth-checkmark {
@@ -339,6 +392,15 @@
 .auth-success-message p {
   color: rgba(255, 255, 255, 0.8);
   font-size: 1rem;
+}
+
+/* Dark mode success message */
+.dark .auth-success-message h3 {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.dark .auth-success-message p {
+  color: rgba(255, 255, 255, 0.9);
 }
 
 /* Password Toggle Specific Styles */
@@ -459,6 +521,11 @@
   white-space: nowrap;
 }
 
+/* Dark mode divider */
+.dark .auth-divider span {
+  color: rgba(255, 255, 255, 0.8);
+}
+
 /* Social Login */
 .auth-social-login {
   display: flex;
@@ -532,6 +599,11 @@
   font-size: 14px;
 }
 
+/* Dark mode signup link */
+.dark .auth-signup-link p {
+  color: rgba(255, 255, 255, 0.9);
+}
+
 .auth-signup-link .a {
   color: #ef4444;
   text-decoration: none;
@@ -588,6 +660,11 @@
   flex-wrap: nowrap;
 }
 
+/* Dark mode terms label */
+.dark .auth-terms-label {
+  color: rgba(255, 255, 255, 0.95);
+}
+
 .auth-terms-checkmark {
   width: 18px;
   height: 18px;
@@ -601,6 +678,12 @@
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
   margin-top: 1px;
+}
+
+/* Dark mode terms checkmark */
+.dark .auth-terms-checkmark {
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  background: rgba(0, 0, 0, 0.3);
 }
 
 .auth-terms-checkbox:checked ~ .auth-terms-label .auth-terms-checkmark {
