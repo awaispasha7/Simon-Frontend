@@ -169,7 +169,7 @@ export function ProfileSettings({ isOpen, onClose, initialTab = 'chat' }: Profil
               </button>
               <button
                 onClick={handleCancel}
-                className="!flex-1 !border-2 !border-gray-300 hover:!bg-gray-50 active:!bg-gray-100 !text-gray-700 !font-medium !py-3.5 !rounded-lg !transition-colors active:!scale-[0.98] !min-h-[48px] !text-base !touch-manipulation"
+                className="!flex-1 !border-2 !border-gray-300 hover:!bg-gray-50 active:!bg-gray-100 !text-black !font-medium !py-3.5 !rounded-lg !transition-colors active:!scale-[0.98] !min-h-[48px] !text-base !touch-manipulation"
               >
                 Cancel
               </button>
@@ -222,7 +222,7 @@ export function ProfileSettings({ isOpen, onClose, initialTab = 'chat' }: Profil
                           setNewEmail('')
                           setError(null)
                         }}
-                        className="!flex-1 !px-4 !py-3.5 !border-2 !border-gray-300 !rounded-lg hover:!bg-gray-50 active:!bg-gray-100 !min-h-[48px] !text-base !font-medium !touch-manipulation"
+                        className="!flex-1 !px-4 !py-3.5 !border-2 !border-gray-300 !rounded-lg hover:!bg-gray-50 active:!bg-gray-100 !text-black !min-h-[48px] !text-base !font-medium !touch-manipulation"
                       >
                         Cancel
                       </button>
@@ -230,7 +230,7 @@ export function ProfileSettings({ isOpen, onClose, initialTab = 'chat' }: Profil
                   </div>
                 ) : (
                   <div className="!flex !flex-col sm:!flex-row !items-stretch sm:!items-center !gap-2.5">
-                    <div className="!flex-1 !h-12 !flex !items-center !px-4 !rounded-lg !border !border-gray-200 !bg-gray-50 !text-gray-700 !text-sm !break-all !overflow-hidden">
+                    <div className="!flex-1 !h-12 !flex !items-center !px-4 !rounded-lg !border !border-gray-200 !bg-gray-50 !text-black !text-sm !break-all !overflow-hidden">
                       <span className="!truncate">{user?.email || '—'}</span>
                     </div>
                     <button
@@ -239,7 +239,7 @@ export function ProfileSettings({ isOpen, onClose, initialTab = 'chat' }: Profil
                         setShowEmailChange(true)
                         setError(null)
                       }}
-                      className="!px-5 !py-3 !text-sm !font-medium !border-2 !border-gray-300 !rounded-lg hover:!bg-gray-50 active:!bg-gray-100 !min-h-[48px] !whitespace-nowrap !touch-manipulation"
+                      className="!px-5 !py-3 !text-sm !font-medium !border-2 !border-gray-300 !rounded-lg hover:!bg-gray-50 active:!bg-gray-100 !text-black !min-h-[48px] !whitespace-nowrap !touch-manipulation"
                     >
                       Change
                     </button>
@@ -316,7 +316,7 @@ export function ProfileSettings({ isOpen, onClose, initialTab = 'chat' }: Profil
                           setPasswordData({ current: '', new: '', confirm: '' })
                           setError(null)
                         }}
-                        className="!flex-1 !px-4 !py-3.5 !border-2 !border-gray-300 !rounded-lg hover:!bg-gray-50 active:!bg-gray-100 !min-h-[48px] !text-base !font-medium !touch-manipulation"
+                        className="!flex-1 !px-4 !py-3.5 !border-2 !border-gray-300 !rounded-lg hover:!bg-gray-50 active:!bg-gray-100 !text-black !min-h-[48px] !text-base !font-medium !touch-manipulation"
                       >
                         Cancel
                       </button>
@@ -328,7 +328,7 @@ export function ProfileSettings({ isOpen, onClose, initialTab = 'chat' }: Profil
                       setShowPasswordChange(true)
                       setError(null)
                     }}
-                    className="!w-full !px-4 !py-3.5 !text-sm !font-medium !border-2 !border-gray-300 !rounded-lg hover:!bg-gray-50 active:!bg-gray-100 !text-left !min-h-[48px] !touch-manipulation"
+                    className="!w-full !px-4 !py-3.5 !text-sm !font-medium !border-2 !border-gray-300 !rounded-lg hover:!bg-gray-50 active:!bg-gray-100 !text-black !text-left !min-h-[48px] !touch-manipulation"
                   >
                     Change Password
                   </button>
@@ -342,11 +342,11 @@ export function ProfileSettings({ isOpen, onClose, initialTab = 'chat' }: Profil
               <div className="!grid !grid-cols-1 sm:!grid-cols-2 !gap-3">
                 <div className="!rounded-lg !border !border-gray-200 !bg-gray-50 !p-4">
                   <div className="!text-xs !font-medium !text-gray-500 !mb-2">User ID</div>
-                  <div className="!text-xs !font-mono !text-gray-700 !break-all !leading-relaxed">{user?.user_id || '—'}</div>
+                  <div className="!text-xs !font-mono !text-black !break-all !leading-relaxed">{user?.user_id || '—'}</div>
                 </div>
                 <div className="!rounded-lg !border !border-gray-200 !bg-gray-50 !p-4">
                   <div className="!text-xs !font-medium !text-gray-500 !mb-2">Member Since</div>
-                  <div className="!text-sm !text-gray-700">{user?.created_at ? new Date(user.created_at).toLocaleDateString() : '—'}</div>
+                  <div className="!text-sm !text-black">{user?.created_at ? new Date(user.created_at).toLocaleDateString() : '—'}</div>
                 </div>
               </div>
 
@@ -379,7 +379,7 @@ export function ProfileSettings({ isOpen, onClose, initialTab = 'chat' }: Profil
                         setError(null)
                       }}
                       disabled={isLoading}
-                      className="!flex-1 !px-4 !py-3.5 !border-2 !border-gray-300 !rounded-lg hover:!bg-gray-50 active:!bg-gray-100 disabled:!opacity-50 !min-h-[48px] !text-base !font-medium !touch-manipulation"
+                      className="!flex-1 !px-4 !py-3.5 !border-2 !border-gray-300 !rounded-lg hover:!bg-gray-50 active:!bg-gray-100 !text-black disabled:!opacity-50 !min-h-[48px] !text-base !font-medium !touch-manipulation"
                     >
                       Cancel
                     </button>
