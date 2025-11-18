@@ -9,60 +9,34 @@ export async function POST(req: NextRequest) {
     const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'
     
     console.log(`🎤 [${requestId}] Backend URL: ${backendUrl}`)
-    console.log(`🎤 [${requestId}] Request headers:`, {
-      'content-type': req.headers.get('content-type'),
-      'content-length': req.headers.get('content-length'),
-      'user-agent': req.headers.get('user-agent'),
-    })
-
-    // Parse the incoming FormData
-    console.log(`🎤 [${requestId}] Parsing incoming FormData...`)
-    const formData = await req.formData()
-    console.log(`🎤 [${requestId}] FormData parsed successfully`)
-    console.log(`🎤 [${requestId}] FormData entries:`, Array.from(formData.entries()).map(([key, value]) => ({
-      key,
-      valueType: value instanceof File ? 'File' : typeof value,
-      fileName: value instanceof File ? value.name : 'N/A',
-      fileSize: value instanceof File ? value.size : 'N/A',
-      fileType: value instanceof File ? value.type : 'N/A',
-    })))
     
-    const audioFile = formData.get('audio_file') as File | null
+    // Get the original Content-Type header (includes the boundary)
+    const contentType = req.headers.get('content-type')
+    console.log(`🎤 [${requestId}] Original Content-Type: ${contentType}`)
     
-    if (!audioFile) {
-      console.error(`🎤 [${requestId}] ❌ No audio file found in FormData`)
+    if (!contentType || !contentType.includes('multipart/form-data')) {
+      console.error(`🎤 [${requestId}] ❌ Invalid Content-Type: ${contentType}`)
       return NextResponse.json(
-        { error: 'No audio file provided' },
+        { error: 'Invalid content type. Expected multipart/form-data' },
         { status: 400 }
       )
     }
 
-    console.log(`🎤 [${requestId}] Audio file details:`, {
-      name: audioFile.name,
-      size: audioFile.size,
-      type: audioFile.type,
-      lastModified: audioFile.lastModified,
-    })
-
-    // Read the file as ArrayBuffer to reconstruct it properly for serverless
-    console.log(`🎤 [${requestId}] Reading file as ArrayBuffer...`)
-    const fileBuffer = await audioFile.arrayBuffer()
-    console.log(`🎤 [${requestId}] File read successfully: ${fileBuffer.byteLength} bytes`)
-    
-    // Create a new FormData with the file blob for the backend
-    console.log(`🎤 [${requestId}] Creating new FormData for backend...`)
-    const backendFormData = new FormData()
-    const fileBlob = new Blob([fileBuffer], { type: audioFile.type || 'audio/webm' })
-    backendFormData.append('audio_file', fileBlob, audioFile.name || 'recording.webm')
-    console.log(`🎤 [${requestId}] Backend FormData created with blob size: ${fileBlob.size} bytes`)
+    // Forward the raw request body directly to preserve the multipart boundary
+    // This is the only reliable way to forward multipart data in serverless environments
+    console.log(`🎤 [${requestId}] Reading raw request body...`)
+    const requestBody = await req.arrayBuffer()
+    console.log(`🎤 [${requestId}] Request body size: ${requestBody.byteLength} bytes`)
 
     console.log(`🎤 [${requestId}] Sending request to backend: ${backendUrl}/transcribe`)
     const fetchStartTime = Date.now()
     
     const response = await fetch(`${backendUrl}/transcribe`, {
       method: 'POST',
-      body: backendFormData,
-      // Don't set Content-Type - fetch will set it automatically with correct boundary
+      body: requestBody,
+      headers: {
+        'Content-Type': contentType, // Preserve the original boundary
+      },
     })
     
     const fetchDuration = Date.now() - fetchStartTime
