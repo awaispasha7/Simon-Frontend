@@ -620,10 +620,29 @@ export function ChatPanel({ _sessionId, onSessionUpdate }: ChatPanelProps) {
         throw new Error('Authentication required to send messages')
       }
       
-      // For authenticated users, prioritize props > local state > hook values
+      // For authenticated users, prioritize props > local state > hook values > localStorage > ref
+      // Check localStorage first as it's the most reliable source
       let sessionId = _sessionId || currentSessionId || hookSessionId || sessionIdRef.current
       
-      console.log('💬 [CHAT] Using sessionId:', sessionId)
+      // If still no sessionId, check localStorage as fallback
+      if (!sessionId) {
+        try {
+          const stored = localStorage.getItem('chat_session')
+          if (stored) {
+            const parsed = JSON.parse(stored)
+            if (parsed.sessionId) {
+              sessionId = parsed.sessionId
+              sessionIdRef.current = parsed.sessionId
+              setCurrentSessionId(parsed.sessionId)
+              console.log('💬 [CHAT] Retrieved session from localStorage:', parsed.sessionId)
+            }
+          }
+        } catch (e) {
+          console.error('Error reading localStorage:', e)
+        }
+      }
+      
+      console.log('💬 [CHAT] Using sessionId:', sessionId, '(sources: _sessionId=', _sessionId, ', currentSessionId=', currentSessionId, ', hookSessionId=', hookSessionId, ', ref=', sessionIdRef.current, ')')
       
       // CRITICAL: Create session if none exists
       if (!sessionId) {
@@ -636,7 +655,7 @@ export function ChatPanel({ _sessionId, onSessionUpdate }: ChatPanelProps) {
           // Wait a bit for the session to be created and state to update
           await new Promise(resolve => setTimeout(resolve, 500))
           
-          // Try to get the session ID again from various sources
+          // Try to get the session ID again from various sources (in order of reliability)
           sessionId = hookSessionId || sessionIdRef.current || currentSessionId
           
           // Check localStorage as a fallback
@@ -649,7 +668,7 @@ export function ChatPanel({ _sessionId, onSessionUpdate }: ChatPanelProps) {
                   sessionId = parsed.sessionId
                   sessionIdRef.current = parsed.sessionId
                   setCurrentSessionId(parsed.sessionId)
-                  console.log('💬 [CHAT] Retrieved session from localStorage:', parsed.sessionId)
+                  console.log('💬 [CHAT] Retrieved session from localStorage after creation:', parsed.sessionId)
                 }
               }
             } catch (e) {
@@ -662,6 +681,12 @@ export function ChatPanel({ _sessionId, onSessionUpdate }: ChatPanelProps) {
           }
           
           console.log('💬 [CHAT] Using newly created session:', sessionId)
+          
+          // Update parent component immediately so it knows about the session
+          if (onSessionUpdate) {
+            onSessionUpdate(sessionId)
+          }
+          
           // Don't dispatch sessionCreated here - wait until message is saved
         } catch (error) {
           console.error('💬 [CHAT] Failed to create session:', error)

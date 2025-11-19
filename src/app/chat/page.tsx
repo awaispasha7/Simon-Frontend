@@ -160,6 +160,15 @@ export default function ChatPage() {
           return
         }
         
+        // If we already have a sessionId, just mark as restored and continue
+        if (currentSessionId) {
+          console.log('✅ [PAGE] Session already set:', currentSessionId)
+          hasRestoredSessionRef.current = true
+          // Still initialize sync manager
+          await sessionSyncManager.initialize()
+          return
+        }
+        
         // First, try to restore from localStorage
         if (!currentSessionId) {
           const stored = localStorage.getItem('chat_session')
