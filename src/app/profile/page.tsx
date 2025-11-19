@@ -77,7 +77,7 @@ export default function ProfilePage() {
           <div className="space-y-6 p-6 pt-0">
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-black dark:text-black mb-2">
                   Display Name
                 </label>
                 {isEditing ? (
@@ -88,7 +88,7 @@ export default function ProfilePage() {
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 ) : (
-                  <p className="text-black! font-medium">{user.display_name || 'Not set'}</p>
+                  <p className="text-black dark:text-black font-medium">{user.display_name || 'Not set'}</p>
                 )}
               </div>
 
