@@ -77,7 +77,7 @@ export default function ProfilePage() {
           <div className="space-y-6 p-6 pt-0">
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-black! dark:text-black! mb-2">
+                <label className="block text-sm font-medium text-black! dark:text-white! mb-2">
                   Display Name
                 </label>
                 {isEditing ? (
@@ -85,10 +85,10 @@ export default function ProfilePage() {
                     type="text"
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black! dark:text-white! dark:bg-gray-800"
                   />
                 ) : (
-                  <p className="text-black! dark:text-black! font-medium">{user.display_name || 'Not set'}</p>
+                  <p className="text-black! dark:text-white! font-medium">{user.display_name || 'Not set'}</p>
                 )}
               </div>
 
