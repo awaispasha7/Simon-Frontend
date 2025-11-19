@@ -103,17 +103,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Get current session
         const { session } = await auth.getCurrentSession()
         if (session?.user) {
-          // Always sync user to backend on app initialization if session exists
-          // syncUserToBackend will update user state if backend returns different user_id
-          await syncUserToBackend(session.user)
-          // Only set user from Supabase if backend didn't override it
-          const backendUserId = typeof window !== 'undefined' ? localStorage.getItem('backend_user_id') : null
-          if (!backendUserId) {
-            const user = convertSupabaseUser(session.user)
-            setUser(user)
-          }
-          // User is set (either by syncUserToBackend or convertSupabaseUser), mark loading as complete
-          setIsLoading(false)
+          // Set user immediately from Supabase to unblock page load
+          const user = convertSupabaseUser(session.user)
+          setUser(user)
+          setIsLoading(false) // Mark loading as complete immediately
+          
+          // Sync user to backend in background (non-blocking)
+          // Use timeout to prevent hanging
+          Promise.race([
+            syncUserToBackend(session.user),
+            new Promise((_, reject) => 
+              setTimeout(() => reject(new Error('User sync timeout')), 3000)
+            )
+          ]).then((synced) => {
+            if (synced) {
+              // Check if backend returned a different user_id
+              const backendUserId = typeof window !== 'undefined' ? localStorage.getItem('backend_user_id') : null
+              if (backendUserId && backendUserId !== session.user.id) {
+                // Backend user_id is different, but we already set loading to false
+                // User state will be updated by syncUserToBackend if needed
+                console.log('⚠️ [AUTH] Backend user_id differs, but page already loaded')
+              }
+            }
+          }).catch((error) => {
+            console.error('User sync failed or timed out:', error)
+            // Continue anyway - user is already set from Supabase
+          })
         } else {
           // No session found, mark loading as complete
           setIsLoading(false)

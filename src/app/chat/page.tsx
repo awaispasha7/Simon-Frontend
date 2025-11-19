@@ -95,20 +95,29 @@ export default function ChatPage() {
       
       // Double-check Supabase session directly before redirecting
       // This handles cases where auth context hasn't updated yet but session exists
+      // Use a timeout to prevent hanging
       try {
-        const { data: { session }, error } = await supabase.auth.getSession()
+        const sessionCheck = Promise.race([
+          supabase.auth.getSession(),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Session check timeout')), 1000)
+          )
+        ]) as Promise<{ data: { session: any }, error: any }>
+        
+        const { data: { session }, error } = await sessionCheck
         if (session?.user) {
           console.log('✅ [PAGE] Found Supabase session, staying on chat page (auth context may be delayed)')
           return
         }
       } catch (error) {
         console.error('Error checking Supabase session:', error)
+        // If timeout or error, continue with redirect check
       }
       
       // Only redirect if truly no session exists
       console.log('🔒 [PAGE] No authentication found, redirecting to login')
       router.push('/auth/login')
-    }, 1500) // Increased delay to give more time for auth initialization
+    }, 1000) // Reduced delay to 1 second
     
     return () => clearTimeout(timeoutId)
   }, [authLoading, isAuthenticated, router])
@@ -187,28 +196,43 @@ export default function ChatPage() {
           }
           
           // If no session in localStorage, fetch the most recent session from backend
+          // Use a timeout to prevent hanging
           console.log('🔄 [PAGE] No session in localStorage, fetching most recent session...')
           try {
-            // Add retry logic for network failures
-            let lastError: unknown = null
-            let sessionsResponse = null
-            
-            for (let attempt = 0; attempt < 3; attempt++) {
-              try {
-                sessionsResponse = await sessionApi.getSessions(1) // Get the most recent session
-                break // Success, exit retry loop
-              } catch (error) {
-                lastError = error
-                if (attempt < 2) {
-                  console.log(`⚠️ [PAGE] Session fetch attempt ${attempt + 1} failed, retrying...`)
-                  await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1))) // Exponential backoff
-                }
-              }
+            // Add timeout wrapper to prevent hanging
+            const fetchWithTimeout = async (timeoutMs: number) => {
+              return Promise.race([
+                (async () => {
+                  // Add retry logic for network failures (faster retries)
+                  let lastError: unknown = null
+                  let sessionsResponse = null
+                  
+                  for (let attempt = 0; attempt < 2; attempt++) { // Reduced to 2 attempts
+                    try {
+                      sessionsResponse = await sessionApi.getSessions(1) // Get the most recent session
+                      break // Success, exit retry loop
+                    } catch (error) {
+                      lastError = error
+                      if (attempt < 1) {
+                        console.log(`⚠️ [PAGE] Session fetch attempt ${attempt + 1} failed, retrying...`)
+                        await new Promise(resolve => setTimeout(resolve, 500)) // Faster retry (500ms)
+                      }
+                    }
+                  }
+                  
+                  if (!sessionsResponse && lastError) {
+                    throw lastError
+                  }
+                  
+                  return sessionsResponse
+                })(),
+                new Promise((_, reject) => 
+                  setTimeout(() => reject(new Error('Session fetch timeout')), timeoutMs)
+                )
+              ])
             }
             
-            if (!sessionsResponse && lastError) {
-              throw lastError
-            }
+            const sessionsResponse = await fetchWithTimeout(3000) // 3 second max timeout
             
             const sessions = Array.isArray(sessionsResponse) 
               ? sessionsResponse 
@@ -235,8 +259,9 @@ export default function ChatPage() {
               console.log('📝 [PAGE] No previous sessions found. Will create session on first message.')
             }
           } catch (error) {
-            console.error('❌ [PAGE] Failed to fetch most recent session after retries:', error)
+            console.error('❌ [PAGE] Failed to fetch most recent session (timeout or error):', error)
             // Don't create a session here - wait for user to send first message
+            // Continue anyway - don't block page load
           } finally {
             hasRestoredSessionRef.current = true
           }
@@ -245,8 +270,11 @@ export default function ChatPage() {
           hasRestoredSessionRef.current = true
         }
         
-        // Then initialize the session sync manager asynchronously
-        await sessionSyncManager.initialize()
+        // Then initialize the session sync manager asynchronously (non-blocking)
+        // Don't wait for it - initialize in background
+        sessionSyncManager.initialize().catch(error => {
+          console.error('Failed to initialize session sync manager:', error)
+        })
       } catch (error) {
         console.error('Failed to initialize session:', error)
         hasRestoredSessionRef.current = true // Mark as attempted even on error
