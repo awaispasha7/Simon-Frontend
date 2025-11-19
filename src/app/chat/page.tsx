@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { Topbar } from '@/components/Topbar'
 import { ChatPanel } from '@/components/ChatPanel'
 import { SessionsSidebar } from '@/components/SessionsSidebar'
@@ -128,6 +128,17 @@ export default function ChatPage() {
     }
   }, [isSidebarCollapsed])
 
+  // Track if we've already attempted session restoration to prevent multiple attempts
+  // Reset when authentication state changes
+  const hasRestoredSessionRef = useRef(false)
+  
+  // Reset restoration flag when auth state changes
+  useEffect(() => {
+    if (!authLoading) {
+      hasRestoredSessionRef.current = false
+    }
+  }, [authLoading, isAuthenticated])
+
   // Initialize session sync and restore most recent session after authentication
   useEffect(() => {
     const initializeSession = async () => {
@@ -136,10 +147,16 @@ export default function ChatPage() {
         return
       }
 
+      // Only restore once per authentication state
+      if (hasRestoredSessionRef.current) {
+        return
+      }
+
       try {
         // Don't restore if currentSessionId is explicitly '' (user wants new chat)
         if (currentSessionId === '') {
           console.log('🆕 [PAGE] New chat requested, skipping session restoration')
+          hasRestoredSessionRef.current = true
           return
         }
         
@@ -152,6 +169,7 @@ export default function ChatPage() {
               if (parsed.sessionId) {
                 console.log('🔄 [PAGE] Restoring session from localStorage:', parsed.sessionId)
                 setCurrentSessionId(parsed.sessionId)
+                hasRestoredSessionRef.current = true
                 return // Found session in localStorage, use it
               }
             } catch (e) {
@@ -162,7 +180,27 @@ export default function ChatPage() {
           // If no session in localStorage, fetch the most recent session from backend
           console.log('🔄 [PAGE] No session in localStorage, fetching most recent session...')
           try {
-            const sessionsResponse = await sessionApi.getSessions(1) // Get the most recent session
+            // Add retry logic for network failures
+            let lastError: unknown = null
+            let sessionsResponse = null
+            
+            for (let attempt = 0; attempt < 3; attempt++) {
+              try {
+                sessionsResponse = await sessionApi.getSessions(1) // Get the most recent session
+                break // Success, exit retry loop
+              } catch (error) {
+                lastError = error
+                if (attempt < 2) {
+                  console.log(`⚠️ [PAGE] Session fetch attempt ${attempt + 1} failed, retrying...`)
+                  await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1))) // Exponential backoff
+                }
+              }
+            }
+            
+            if (!sessionsResponse && lastError) {
+              throw lastError
+            }
+            
             const sessions = Array.isArray(sessionsResponse) 
               ? sessionsResponse 
               : (sessionsResponse && typeof sessionsResponse === 'object' && 'sessions' in sessionsResponse)
@@ -188,20 +226,26 @@ export default function ChatPage() {
               console.log('📝 [PAGE] No previous sessions found. Will create session on first message.')
             }
           } catch (error) {
-            console.error('Failed to fetch most recent session:', error)
+            console.error('❌ [PAGE] Failed to fetch most recent session after retries:', error)
             // Don't create a session here - wait for user to send first message
+          } finally {
+            hasRestoredSessionRef.current = true
           }
+        } else {
+          // Session already set, mark as restored
+          hasRestoredSessionRef.current = true
         }
         
         // Then initialize the session sync manager asynchronously
         await sessionSyncManager.initialize()
       } catch (error) {
         console.error('Failed to initialize session:', error)
+        hasRestoredSessionRef.current = true // Mark as attempted even on error
       }
     }
 
     initializeSession()
-  }, [authLoading, isAuthenticated, user, currentSessionId]) // Run when auth state changes
+  }, [authLoading, isAuthenticated, user]) // Removed currentSessionId from deps to prevent loops
 
   // Listen for session cleared, updated, and deleted events
   useEffect(() => {

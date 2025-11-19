@@ -265,10 +265,32 @@ export function ChatPanel({ _sessionId, onSessionUpdate }: ChatPanelProps) {
       
       // For authenticated users with no session ID, try to restore the most recent session
       // BUT: Don't restore if _sessionId is explicitly '' (user clicked "New Chat")
+      // NOTE: This should rarely run since page.tsx handles restoration, but keep as fallback
       if (isAuthenticated && user && !sessionIdToUse && _sessionId !== '') {
         try {
           const { sessionApi } = await import('@/lib/api')
-          const sessionsResponse = await sessionApi.getSessions(1) // Get the most recent session
+          
+          // Add retry logic for network failures
+          let lastError: unknown = null
+          let sessionsResponse = null
+          
+          for (let attempt = 0; attempt < 3; attempt++) {
+            try {
+              sessionsResponse = await sessionApi.getSessions(1) // Get the most recent session
+              break // Success, exit retry loop
+            } catch (error) {
+              lastError = error
+              if (attempt < 2) {
+                console.log(`⚠️ [CHAT] Session fetch attempt ${attempt + 1} failed, retrying...`)
+                await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1))) // Exponential backoff
+              }
+            }
+          }
+          
+          if (!sessionsResponse && lastError) {
+            throw lastError
+          }
+          
           const sessions = Array.isArray(sessionsResponse) 
             ? sessionsResponse 
             : (sessionsResponse && typeof sessionsResponse === 'object' && 'sessions' in sessionsResponse)
@@ -301,7 +323,7 @@ export function ChatPanel({ _sessionId, onSessionUpdate }: ChatPanelProps) {
             return
           }
         } catch (error) {
-          console.error('Failed to restore last session:', error)
+          console.error('❌ [CHAT] Failed to restore last session after retries:', error)
           // If we can't restore, don't create a new session - wait for first message
           return
         }
@@ -317,7 +339,36 @@ export function ChatPanel({ _sessionId, onSessionUpdate }: ChatPanelProps) {
 
       try {
         const { sessionApi } = await import('@/lib/api')
-        const messagesResponse = await sessionApi.getSessionMessages(finalSessionId, 50, 0)
+        
+        // Add retry logic for network failures
+        let lastError: unknown = null
+        let messagesResponse = null
+        
+        for (let attempt = 0; attempt < 3; attempt++) {
+          try {
+            messagesResponse = await sessionApi.getSessionMessages(finalSessionId, 50, 0)
+            break // Success, exit retry loop
+          } catch (error) {
+            lastError = error
+            // Don't retry on 404/403 (invalid session) - these are permanent errors
+            if (error && typeof error === 'object' && 'response' in error && 
+                error.response && typeof error.response === 'object' && 'status' in error.response) {
+              const status = error.response.status
+              if (status === 404 || status === 403) {
+                throw error // Re-throw immediately for invalid sessions
+              }
+            }
+            
+            if (attempt < 2) {
+              console.log(`⚠️ [CHAT] Message fetch attempt ${attempt + 1} failed, retrying...`)
+              await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1))) // Exponential backoff
+            }
+          }
+        }
+        
+        if (!messagesResponse && lastError) {
+          throw lastError
+        }
         
         // Handle backend response structure: { success: true, messages: [...] }
         const messages = (messagesResponse as { messages?: unknown[] })?.messages || []
@@ -401,7 +452,7 @@ export function ChatPanel({ _sessionId, onSessionUpdate }: ChatPanelProps) {
     }
 
     loadSessionMessages()
-  }, [_sessionId, isAuthenticated, user?.user_id, currentSessionId, hookSessionId, user])
+  }, [_sessionId, isAuthenticated, user?.user_id, currentSessionId, hookSessionId]) // Removed 'user' object to prevent unnecessary re-runs
 
   // Sync hook session values with local state
   useEffect(() => {
